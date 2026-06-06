@@ -96,13 +96,15 @@ class TestMotorIA:
         assert 0.95 <= total <= 1.05, f"pesos suman {total:.4f}, esperaba ~1.0"
 
     def test_actualizar_pesos_aciertos_aumenta_peso(self, motor):
-        # Si un algoritmo acierta sistemáticamente, su peso debe crecer
+        # actualizar_pesos espera cada predicción con 'aciertos' y un dict
+        # 'pesos_por_algoritmo' {algoritmo: contribución}. Con contribución
+        # positiva y aciertos, el peso de ese algoritmo debe crecer.
         peso_inicial = motor.pesos["entropia"]
         historial = [
-            {"algoritmo": "entropia", "aciertos": 5}
+            {"aciertos": 5, "pesos_por_algoritmo": {"entropia": 1.0}}
             for _ in range(5)
         ]
         motor.actualizar_pesos(historial)
         peso_final = motor.pesos["entropia"]
-        assert peso_final >= peso_inicial, \
-            f"peso bajó de {peso_inicial} a {peso_final} pese a 5 aciertos consecutivos"
+        assert peso_final > peso_inicial, \
+            f"peso no creció: {peso_inicial} -> {peso_final} pese a 5 aciertos consecutivos"
