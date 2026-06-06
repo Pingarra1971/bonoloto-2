@@ -1,0 +1,39 @@
+# Python
+pycache/
+*.pyc
+venv/
+.venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.pub-cache/
+.idea/
+*.iml
+android/.gradle/
+ios/Pods/
+ios/.symlinks/
+
+# Secretos (nunca subir)
+.env
+*.env
+*.sso
+*.p12
+*.key
+*.pem
+cwallet.sso
+ewallet.p12
+tnsnames.ora
+sqlnet.ora
+wallet/
+
+# Sistema
+.DS_Store
+Thumbs.db
