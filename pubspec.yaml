@@ -1,0 +1,73 @@
+name: bonoloto_2
+description: Bonoloto 2.0 — Sistema cuantitativo de análisis aplicado a la Bonoloto
+publish_to: 'none'
+version: 2.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management — Sesión 3: migrado de Provider a Riverpod
+  flutter_riverpod: ^2.5.1
+  shared_preferences: ^2.2.2
+
+  # HTTP & SSE — Sesión 3: usado dio en lugar de http
+  dio: ^5.4.0
+  http: ^1.1.0   # se conserva para compat con el cliente SSE bare-metal
+
+  # UI
+  fl_chart: ^0.66.0
+  flutter_animate: ^4.3.0
+  shimmer: ^3.0.0
+  lottie: ^3.0.0
+
+  # Storage & Export
+  sqflite: ^2.3.0
+  path_provider: ^2.1.1
+  pdf: ^3.10.7
+  excel: ^4.0.2
+  share_plus: ^7.2.1
+  permission_handler: ^11.1.0
+
+  # Notifications
+  # flutter_local_notifications: desactivada temporalmente por bug de
+  # compilación en Android (issue #2329). Reactivar con versión >= 17.2.2.
+
+  # Google Drive backup
+  google_sign_in: ^6.2.1
+  googleapis: ^13.1.0
+
+  # Security
+  flutter_secure_storage: ^9.0.0
+  crypto: ^3.0.3
+
+  # Date & Time (timezone es necesaria para Europe/Madrid — fix bug #111 sesión 1)
+  intl: ^0.18.1
+  timezone: ^0.9.2
+
+  # Icons & Fonts
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  google_fonts: ^6.1.0
+
+  # Charts
+  syncfusion_flutter_charts: ^24.1.41
+
+  # Connectivity
+  # connectivity_plus: eliminada — estaba declarada pero no se usaba en
+  # ninguna parte del codigo. La comprobacion de conexion se hace contra
+  # el servidor (boton "Probar conexion"), no con esta libreria.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  # Las fuentes (Rajdhani, SpaceMono) se cargan vía el paquete google_fonts,
+  # que las descarga automáticamente. No se declaran fuentes ni imágenes
+  # locales porque la app no incluye ninguna en el proyecto.

@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════
+# BONOLOTO 2.0 — SERVICIO SYSTEMD
+# Instalar en: /etc/systemd/system/bonoloto-2.service
+# ═══════════════════════════════════════════════════════════
+#
+# Comandos:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable bonoloto-2
+#   sudo systemctl start bonoloto-2
+#   sudo systemctl status bonoloto-2
+#   sudo journalctl -u bonoloto-2 -f
+
+[Unit]
+Description=Bonoloto 2.0 — Backend FastAPI
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bonoloto
+Group=bonoloto
+# Nueva ruta tras refactor estructural: la raíz contiene el paquete `app/`
+WorkingDirectory=/home/bonoloto/bonoloto_2
+Environment="PATH=/home/bonoloto/bonoloto_2/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/home/bonoloto/bonoloto_2"
+EnvironmentFile=/etc/bonoloto-2.env
+
+# uvicorn apuntando al nuevo entry point `app.main:app`
+ExecStart=/home/bonoloto/bonoloto_2/venv/bin/uvicorn app.main:app \
+  --host 0.0.0.0 --port 8000 \
+  --workers 1 \
+  --timeout-keep-alive 3600 \
+  --log-level info
+
+# Reinicio automático ante fallos
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+# Timeouts adecuados para cálculos largos (8-50 min típico)
+TimeoutStartSec=300
+TimeoutStopSec=120
+
+# Recursos — ARM Ampere 24GB Always Free
+MemoryMax=20G
+CPUQuota=380%
+
+# Límites
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Seguridad
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/bonoloto/bonoloto_2
+
+# Logs a journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bonoloto-2
+
+[Install]
+WantedBy=multi-user.target

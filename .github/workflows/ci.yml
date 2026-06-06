@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    name: Backend — Tests Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Solo las deps necesarias para tests (no las pesadas de ML)
+          pip install numpy scipy pytest pytest-asyncio || true
+
+      - name: Run tests (runner sin pytest como fallback)
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          # El runner manual no requiere pytest instalado
+          python run_tests.py
+
+      - name: Syntax check all Python
+        run: |
+          python -c "
+          import ast, pathlib, sys
+          errores = 0
+          for p in pathlib.Path('app').rglob('*.py'):
+              try:
+                  ast.parse(p.read_text())
+              except SyntaxError as e:
+                  print(f'SYNTAX ERROR {p}: {e}')
+                  errores += 1
+          sys.exit(1 if errores else 0)
+          "
+
+  algoritmos-integridad:
+    name: Backend — Integridad de los 115 algoritmos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install numpy/scipy
+        run: pip install numpy scipy
+      - name: Auditar algoritmos
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          python tools_auditar_algoritmos.py
+
+  frontend-analyze:
+    name: Frontend — Flutter analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Flutter analyze
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true   # warnings no bloquean (aún)
+      - name: Flutter test
+        run: flutter test
+        continue-on-error: true

@@ -1,0 +1,12 @@
+# Dependencias para desarrollo y testing.
+# Instalar con: pip install -r requirements-dev.txt
+# (requiere haber instalado requirements.txt antes)
+
+-r requirements.txt
+
+pytest==8.0.0
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+black==24.1.0
+ruff==0.1.14
+mypy==1.8.0

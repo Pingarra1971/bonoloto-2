@@ -1,0 +1,50 @@
+# ═══════════════════════════════════════════════════════════
+# BONOLOTO 2.0 — WATCHDOG + SCHEDULER
+# Instalar en: /etc/systemd/system/bonoloto-watchdog.service
+# ═══════════════════════════════════════════════════════════
+#
+# Servicio OPCIONAL. Si no lo activas:
+#   - El backend funciona igual vía bonoloto-2.service
+#   - PERO no se actualizará la memoria ni reentrenará automáticamente
+#     tras cada sorteo (tendrías que añadir los sorteos a mano).
+#
+# Para activarlo:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable bonoloto-watchdog
+#   sudo systemctl start bonoloto-watchdog
+#   sudo journalctl -u bonoloto-watchdog -f
+#
+# Permite reiniciar el backend sin contraseña (necesario para el watchdog):
+#   echo "bonoloto ALL=(ALL) NOPASSWD: /bin/systemctl restart bonoloto-2" \
+#       | sudo tee /etc/sudoers.d/bonoloto-watchdog
+
+[Unit]
+Description=Bonoloto 2.0 — Watchdog + Scheduler
+After=network.target bonoloto-2.service
+Wants=network-online.target
+PartOf=bonoloto-2.service
+
+[Service]
+Type=simple
+User=bonoloto
+Group=bonoloto
+WorkingDirectory=/home/bonoloto/bonoloto_2
+Environment="PATH=/home/bonoloto/bonoloto_2/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/home/bonoloto/bonoloto_2"
+EnvironmentFile=/etc/bonoloto-2.env
+
+ExecStart=/home/bonoloto/bonoloto_2/venv/bin/python -m app.infrastructure.scheduler.watchdog
+
+Restart=always
+RestartSec=30
+
+# Recursos muy modestos (es solo un monitor)
+MemoryMax=256M
+CPUQuota=20%
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bonoloto-watchdog
+
+[Install]
+WantedBy=multi-user.target
