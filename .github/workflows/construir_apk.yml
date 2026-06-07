@@ -20,12 +20,14 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
+          java-version: "17"
 
       - name: Preparar Flutter
+        # Usamos la última versión estable de Flutter: la app usa APIs modernas
+        # (CardThemeData, Color.withValues...) que las versiones antiguas no
+        # conocen. Con "stable" sin fijar versión, siempre coge la más reciente.
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.19.0"
           channel: stable
 
       - name: Generar el proyecto Android
@@ -37,12 +39,6 @@ jobs:
 
       - name: Descargar dependencias
         run: flutter pub get
-
-     - name: Corregir compatibilidad de colores para Flutter viejo
-        run: |
-          find . -name "*.dart" -type f -exec sed -i "s/\.withValues(alpha: \([^)]*\))/\.withOpacity(\1)/g" {} +
-          find . -name "*.dart" -type f -exec sed -i "s/surfaceContainerHighest/surfaceVariant/g" {} +
-          find . -name "*.dart" -type f -exec sed -i "s/CardThemeData/CardTheme/g" {} +
 
       - name: Compilar el APK
         # APK de depuración: se instala en cualquier móvil sin firmar nada y
