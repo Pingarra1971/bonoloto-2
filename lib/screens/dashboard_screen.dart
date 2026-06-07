@@ -226,9 +226,9 @@ class _TarjetaEstadoSistema extends ConsumerWidget {
             Row(
               children: [
                 _ItemEstado(
-                  icono: Icons.cloud_rounded,
-                  etiqueta: 'Oracle Cloud',
-                  valor: 'ARM 24GB',
+                  icono: Icons.cloud_done_rounded,
+                  etiqueta: 'Sistema',
+                  valor: 'Automático',
                   activo: conectado,
                 ),
                 const SizedBox(width: 12),
@@ -715,7 +715,7 @@ class _BotonCalcular extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'El motor Oracle Cloud calculará combinaciones óptimas hasta alcanzar la convergencia máxima.',
+                'Se descargarán las combinaciones del día, generadas automáticamente con el análisis estadístico del histórico.',
                 style: GoogleFonts.spaceMono(fontSize: 15),
               ),
               const SizedBox(height: 20),
