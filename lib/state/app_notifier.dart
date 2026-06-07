@@ -10,7 +10,8 @@ import '../models/models.dart';
 import '../services/backend_service.dart';
 import '../services/api_client.dart';
 import '../services/services.dart'
-    show ExportService, BackupService, LoteriasApiService;
+    show ExportService, BackupService, LoteriasApiService,
+        DatosDiariosService, DatosDiarios;
 import 'app_state.dart';
 
 /// StateNotifier global: reemplaza al `AppProvider` (ChangeNotifier) del v7.
@@ -32,6 +33,30 @@ class AppNotifier extends StateNotifier<AppState> {
   // individuales en sesiones futuras.
   Timer? _timerSorteo;
   StreamSubscription<ProgresoCalculo>? _streamProgreso;
+
+  // Caché en memoria de los datos del día (combinaciones, estadísticas, etc.)
+  // descargados de GitHub. Evita descargas repetidas en pocos minutos.
+  DatosDiarios? _datosDiariosCache;
+  DateTime? _datosDiariosCacheTime;
+
+  /// Descarga (o reutiliza) los datos del día publicados en GitHub.
+  /// Cachea 10 minutos salvo que se fuerce.
+  Future<DatosDiarios?> _obtenerDatosDiarios({bool forzar = false}) async {
+    final cache = _datosDiariosCache;
+    final t = _datosDiariosCacheTime;
+    if (!forzar &&
+        cache != null &&
+        t != null &&
+        DateTime.now().difference(t) < const Duration(minutes: 10)) {
+      return cache;
+    }
+    final datos = await DatosDiariosService().descargar();
+    if (datos != null) {
+      _datosDiariosCache = datos;
+      _datosDiariosCacheTime = DateTime.now();
+    }
+    return datos;
+  }
 
   AppNotifier() : super(AppState.inicial);
 
@@ -99,17 +124,6 @@ class AppNotifier extends StateNotifier<AppState> {
       authToken: c.oracleCloudToken.isNotEmpty ? c.oracleCloudToken : null,
     );
     _backendService = BackendService(_apiClient!);
-  }
-
-  /// Helper para acceder al servicio en endpoints; si no hay credenciales,
-  /// lanza una excepción clara para que la UI muestre el mensaje correcto.
-  BackendService get _backend {
-    if (_backendService == null) {
-      throw StateError(
-        'Backend no configurado: define credenciales antes de calcular.',
-      );
-    }
-    return _backendService!;
   }
 
   // ═══════════════════════════════════════════
@@ -229,19 +243,11 @@ class AppNotifier extends StateNotifier<AppState> {
   /// la clave de la API de loterías funciona. Devuelve un resultado legible
   /// para mostrar al usuario en la pantalla de Ajustes.
   Future<ResultadoPrueba> probarConexion() async {
-    // 1. ¿Está configurada la URL del servidor?
-    if (!state.credenciales.estaConfigurado) {
-      return const ResultadoPrueba(
-        servidorOk: false,
-        apiOk: false,
-        mensaje: 'Falta configurar la URL del servidor en Credenciales.',
-      );
-    }
-
-    // 2. ¿Responde el servidor?
+    // 1. ¿Se descargan las combinaciones del día desde GitHub?
     bool servidorOk = false;
     try {
-      servidorOk = await _backend.comprobarSalud();
+      final datos = await _obtenerDatosDiarios(forzar: true);
+      servidorOk = datos != null && datos.combinaciones.isNotEmpty;
     } catch (_) {
       servidorOk = false;
     }
@@ -249,12 +255,12 @@ class AppNotifier extends StateNotifier<AppState> {
       return const ResultadoPrueba(
         servidorOk: false,
         apiOk: false,
-        mensaje: 'No se pudo conectar con el servidor. Revisa la URL y que el '
-            'servidor esté encendido.',
+        mensaje: 'No se pudieron descargar las combinaciones del día. '
+            'Revisa tu conexión a internet.',
       );
     }
 
-    // 3. ¿Funciona la clave de la API de loterías? (opcional)
+    // 2. La clave de la API de loterías es opcional (solo respaldo).
     bool apiOk = false;
     if (state.credenciales.loteriasApiKey.isNotEmpty) {
       try {
@@ -264,13 +270,13 @@ class AppNotifier extends StateNotifier<AppState> {
       }
     }
 
-    final msg = StringBuffer('Servidor conectado ✓');
+    final msg = StringBuffer('Combinaciones del día descargadas ✓');
     if (state.credenciales.loteriasApiKey.isEmpty) {
-      msg.write('\nAPI de loterías: sin clave (los resultados se meten a mano).');
+      msg.write('\nNo necesitas clave de API: los datos llegan solos.');
     } else if (apiOk) {
-      msg.write('\nAPI de loterías conectada ✓');
+      msg.write('\nAPI de loterías conectada ✓ (respaldo)');
     } else {
-      msg.write('\nAPI de loterías: la clave no funciona o no responde.');
+      msg.write('\nAPI de loterías: la clave no responde (no es necesaria).');
     }
 
     return ResultadoPrueba(
@@ -284,10 +290,12 @@ class AppNotifier extends StateNotifier<AppState> {
     await actualizarConfiguracion(state.config.copyWith(modoIncognito: activo));
   }
 
-  /// Inicia un cálculo. Devuelve el trabajoId si fue lanzado, null si falló.
+  /// "Calcula" las combinaciones del día. Ahora NO hay servidor en vivo: las
+  /// combinaciones ya están generadas por la tarea automática de GitHub, así
+  /// que esto las DESCARGA y rellena la sesión actual (más estadísticas y
+  /// último sorteo, que vienen en el mismo fichero).
   ///
-  /// Usa SSE para progreso: actualiza `state.sesionActual` automáticamente
-  /// hasta que el cálculo termine o falle.
+  /// Mantiene la firma anterior por compatibilidad con las pantallas.
   Future<String?> iniciarCalculo({
     required int cantidad,
     double presupuestoEur = 10.0,
@@ -298,97 +306,77 @@ class AppNotifier extends StateNotifier<AppState> {
       return null;
     }
 
-    // Cancelar cualquier stream previo (paranoia: no debería haber)
+    // Cancelar cualquier stream previo (por si quedara alguno del flujo viejo).
     await _streamProgreso?.cancel();
     _streamProgreso = null;
 
-    try {
-      final trabajoId = await _backend.iniciarCalculo(
-        cantidad: cantidad,
-        presupuestoEur: presupuestoEur,
-        boteAcumuladoEur: boteAcumuladoEur,
-      );
-
-      // Crear sesión inicial y publicarla
-      final sesion = SesionPrediccion.inicial(
-        id: trabajoId,
-        cantidad: cantidad,
-      );
-      state = state.copyWith(sesionActual: sesion, clearError: true);
-
-      // Suscribirse al stream SSE
-      _streamProgreso = _backend.streamProgreso(trabajoId).listen(
-        _onProgresoSSE,
-        onError: _onErrorSSE,
-        onDone: _onDoneSSE,
-      );
-
-      return trabajoId;
-    } catch (e) {
-      state = state.copyWith(error: 'Error iniciando cálculo: $e');
-      return null;
-    }
-  }
-
-  void _onProgresoSSE(ProgresoCalculo p) {
-    final sesion = state.sesionActual;
-    if (sesion == null) return;
-    final nueva = sesion.conProgreso(p);
-    state = state.copyWith(sesionActual: nueva);
-  }
-
-  void _onErrorSSE(Object err) {
-    final sesion = state.sesionActual;
-    if (sesion == null) return;
-    state = state.copyWith(
-      sesionActual: sesion.copyWith(estado: EstadoCalculo.error),
-      error: 'Error SSE: $err',
-    );
-  }
-
-  Future<void> _onDoneSSE() async {
-    // El stream terminó. En nuestro protocolo SSE, onDone solo se dispara
-    // tras un cierre limpio, que significa "completado" o "error".
-    //
-    // Bug #133: no dependemos del orden de entrega entre el evento
-    // "completado" (que marca el estado) y este onDone. Si la sesión NO
-    // quedó en error, intentamos obtener el resultado igualmente. Si el
-    // backend aún no lo tiene listo, obtenerResultado lanzará y lo
-    // capturamos sin romper nada.
-    final sesion = state.sesionActual;
-    if (sesion == null) return;
-    if (sesion.estado == EstadoCalculo.error) return;
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    // Sesión "calculando" para que la pantalla de progreso muestre algo
+    // mientras se descarga (suele ser un instante).
+    final inicial = SesionPrediccion.inicial(id: id, cantidad: cantidad)
+        .copyWith(estado: EstadoCalculo.calculando, progresoGeneral: 0.35);
+    state = state.copyWith(sesionActual: inicial, clearError: true);
 
     try {
-      final res = await _backend.obtenerResultado(sesion.id);
-      // Marcamos completado explícitamente por si el evento de progreso
-      // "completado" no llegó a procesarse antes que este onDone.
-      final completa = sesion.copyWith(
+      final datos = await _obtenerDatosDiarios(forzar: true);
+
+      if (datos == null || datos.combinaciones.isEmpty) {
+        state = state.copyWith(
+          sesionActual: inicial.copyWith(estado: EstadoCalculo.error),
+          error: 'No se pudieron descargar las combinaciones del día. '
+              'Revisa tu conexión a internet e inténtalo de nuevo.',
+        );
+        return null;
+      }
+
+      // Recortar a la cantidad que ha pedido el usuario.
+      final combos = datos.combinaciones.length > cantidad
+          ? datos.combinaciones.sublist(0, cantidad)
+          : datos.combinaciones;
+
+      final completa = inicial.copyWith(
         estado: EstadoCalculo.completado,
         progresoGeneral: 1.0,
-        combinaciones: res.combinaciones,
-        apuestasMultiples: res.apuestasMultiples,
-        fechaSorteoObjetivo: proximaFechaSorteo(),
+        combinaciones: combos,
+        apuestasMultiples: datos.apuestasMultiples,
+        indiceConfianzaActual:
+            combos.isNotEmpty ? combos.first.indiceConfianza : null,
+        fechaSorteoObjetivo: datos.fechaSorteo ?? proximaFechaSorteo(),
       );
+
       var nuevoHistorial = state.historial;
       if (!state.config.modoIncognito) {
-        // Evitar duplicados si ya estuviera en el historial
         final yaExiste = state.historial.any((s) => s.id == completa.id);
         if (!yaExiste) {
           nuevoHistorial = [completa, ...state.historial];
         }
       }
+
       state = state.copyWith(
         sesionActual: completa,
         historial: nuevoHistorial,
+        estadisticas: datos.estadisticas.isNotEmpty
+            ? datos.estadisticas
+            : state.estadisticas,
+        rendimientoAlgoritmos: datos.rendimientoAlgoritmos.isNotEmpty
+            ? datos.rendimientoAlgoritmos
+            : state.rendimientoAlgoritmos,
+        resultadosOficiales: datos.ultimoSorteo != null
+            ? [datos.ultimoSorteo!]
+            : state.resultadosOficiales,
       );
       await _guardarHistorial();
+      return id;
     } catch (e) {
-      state = state.copyWith(error: 'Error obteniendo resultado: $e');
+      state = state.copyWith(
+        sesionActual: inicial.copyWith(estado: EstadoCalculo.error),
+        error: 'Error descargando combinaciones: $e',
+      );
+      return null;
     }
   }
 
-  /// Cancela el cálculo en curso (cierra SSE local; el backend sigue calculando).
+  /// Cancela el cálculo en curso.
   Future<void> cancelarCalculo() async {
     await _streamProgreso?.cancel();
     _streamProgreso = null;
@@ -399,20 +387,25 @@ class AppNotifier extends StateNotifier<AppState> {
   // MÉTODOS DE DATOS
   // ═══════════════════════════════════════════
 
-  /// Carga estadísticas: rendimiento de algoritmos + frecuencias por número.
-  /// Bug #152: antes solo cargaba rendimiento; state.estadisticas quedaba
-  /// siempre vacío y la pantalla mostraba "Cargando" eternamente.
+  /// Carga estadísticas (frecuencias por número) y el rendimiento aproximado
+  /// por algoritmo, ambos desde el fichero diario de GitHub.
   Future<void> cargarEstadisticas() async {
-    if (_backendService == null) return;
     try {
-      final algos = await _backendService!.obtenerRendimientoAlgoritmos();
-      final nums = await _backendService!.obtenerEstadisticasNumeros();
+      final datos = await _obtenerDatosDiarios();
+      if (datos == null) return;
       state = state.copyWith(
-        rendimientoAlgoritmos: algos,
-        estadisticas: nums,
+        estadisticas: datos.estadisticas.isNotEmpty
+            ? datos.estadisticas
+            : state.estadisticas,
+        rendimientoAlgoritmos: datos.rendimientoAlgoritmos.isNotEmpty
+            ? datos.rendimientoAlgoritmos
+            : state.rendimientoAlgoritmos,
+        resultadosOficiales: datos.ultimoSorteo != null
+            ? [datos.ultimoSorteo!]
+            : state.resultadosOficiales,
       );
     } catch (e) {
-      // Silencioso: si falla, dejamos las estadísticas como estaban
+      // Silencioso: si falla, dejamos las estadísticas como estaban.
     }
   }
 
@@ -447,16 +440,27 @@ class AppNotifier extends StateNotifier<AppState> {
     }
   }
 
-  /// Pide el resultado del ÚLTIMO sorteo oficial directamente a la API
-  /// (endpoint /latest). Devuelve null si no hay API key o si la API falla.
+  /// Resultado del ÚLTIMO sorteo oficial. Ahora viene en el fichero diario de
+  /// GitHub (no necesita clave de API). Si por lo que fuera no estuviera, se
+  /// intenta como respaldo la API de loterías (si hay clave configurada).
   Future<ResultadoSorteo?> obtenerUltimoSorteo() async {
-    if (state.credenciales.loteriasApiKey.isEmpty) return null;
     try {
-      return await LoteriasApiService(state.credenciales)
-          .obtenerUltimoResultado();
+      final datos = await _obtenerDatosDiarios();
+      if (datos?.ultimoSorteo != null) {
+        return datos!.ultimoSorteo;
+      }
     } catch (_) {
-      return null;
+      // seguimos al respaldo
     }
+    if (state.credenciales.loteriasApiKey.isNotEmpty) {
+      try {
+        return await LoteriasApiService(state.credenciales)
+            .obtenerUltimoResultado();
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 
   /// Lee los últimos N sorteos oficiales vía LoteriasApiService si hay API
