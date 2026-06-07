@@ -245,6 +245,45 @@ def _a_nativo(obj):
     return obj
 
 
+def calcular_estadisticas(sorteos):
+    """Frecuencias por número (1-49) y clasificación caliente/frío/neutro.
+
+    `sorteos` viene ordenado de más reciente (índice 0) a más antiguo, así que
+    'ultima_aparicion_hace' = índice de la primera aparición. Mismas reglas que
+    la pantalla de estadísticas de la app (umbral ±15% sobre lo esperado).
+    """
+    total = len(sorteos)
+    if total == 0:
+        return []
+    apariciones = {n: [] for n in range(1, 50)}
+    for i, s in enumerate(sorteos):
+        for n in s.get("numeros", []):
+            if 1 <= n <= 49:
+                apariciones[n].append(i)
+    esperada = 6 / 49
+    stats = []
+    for n in range(1, 50):
+        idxs = apariciones[n]
+        freq_total = len(idxs)
+        rel = freq_total / total
+        if rel > esperada * 1.15:
+            clasif = "caliente"
+        elif rel < esperada * 0.85:
+            clasif = "frio"
+        else:
+            clasif = "neutro"
+        stats.append({
+            "numero": n,
+            "frecuencia_total": freq_total,
+            "frecuencia_ultimos_50": sum(1 for i in idxs if i < 50),
+            "frecuencia_ultimos_100": sum(1 for i in idxs if i < 100),
+            "frecuencia_ultimos_500": sum(1 for i in idxs if i < 500),
+            "ultima_aparicion_hace": idxs[0] if idxs else None,
+            "clasificacion": clasif,
+        })
+    return stats
+
+
 async def main():
     print("→ Descargando histórico de Bonoloto...")
     sorteos = descargar_historico()
@@ -272,6 +311,7 @@ async def main():
         "generado": datetime.now(timezone.utc).isoformat(),
         "fecha_sorteo": proxima_fecha_sorteo(),
         "total_historico": len(sorteos),
+        "estadisticas": calcular_estadisticas(sorteos),
         "ultimo_sorteo": sorteos[0] if sorteos else None,
         "combinaciones": resultado.combinaciones,
         "apuestas_multiples": apuestas_multiples,
