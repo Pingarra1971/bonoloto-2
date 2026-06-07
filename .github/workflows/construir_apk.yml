@@ -1,0 +1,51 @@
+name: Construir APK (app Android)
+
+# Cuándo se ejecuta:
+#  - Solo a mano: pestaña "Actions" -> "Construir APK (app Android)"
+#    -> botón "Run workflow". (No se ejecuta solo para no gastar minutos.)
+#
+# Qué hace: monta el proyecto Android, compila la app y deja el APK como
+# "artefacto" descargable al final de la ejecución. Lo instalas en el móvil.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Preparar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.19.0"
+          channel: stable
+
+      - name: Generar el proyecto Android
+        # El repositorio solo guarda el código (lib/). Este paso crea la
+        # carpeta nativa de Android sin tocar tu código ni el pubspec.
+        run: |
+          rm -rf android
+          flutter create . --platforms=android --project-name bonoloto_2 --org com.pingarra
+
+      - name: Descargar dependencias
+        run: flutter pub get
+
+      - name: Compilar el APK
+        # APK de depuración: se instala en cualquier móvil sin firmar nada y
+        # ya incluye permiso de Internet (necesario para descargar los datos).
+        run: flutter build apk --debug
+
+      - name: Publicar el APK como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: bonoloto-app-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
