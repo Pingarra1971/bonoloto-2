@@ -469,7 +469,7 @@ class TutorialScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'El motor de Oracle Cloud ejecuta 115 algoritmos en varias capas. Cada algoritmo analiza el histórico de sorteos desde un enfoque diferente. El meta-modelo de consenso pondera los resultados y genera combinaciones con un índice de confianza interno del 0 al 100%. Importante: ese índice mide el acuerdo entre algoritmos, NO la probabilidad de acertar. En un sorteo aleatorio todas las combinaciones tienen la misma probabilidad.',
+                    'El sistema ejecuta 115 algoritmos en varias capas. Cada algoritmo analiza el histórico de sorteos desde un enfoque diferente. El meta-modelo de consenso pondera los resultados y genera combinaciones con un índice de confianza interno del 0 al 100%. Importante: ese índice mide el acuerdo entre algoritmos, NO la probabilidad de acertar. En un sorteo aleatorio todas las combinaciones tienen la misma probabilidad.',
                     style: GoogleFonts.spaceMono(fontSize: 15, height: 1.6),
                   ),
                   const SizedBox(height: 12),
@@ -832,7 +832,7 @@ class AjustesScreen extends ConsumerWidget {
             _ItemAccion(
               icono: Icons.info_rounded,
               etiqueta: 'Bonoloto 2.0',
-              subtitulo: 'Versión 2.0.0 — Motor Oracle Cloud ARM 24GB',
+              subtitulo: 'Versión 2.0.0 — Análisis estadístico automático',
               color: BonolotoTheme.colorInfo,
               onTap: () {},
             ),
@@ -1309,11 +1309,11 @@ class _CredencialesScreenState extends ConsumerState<CredencialesScreen> {
             const SizedBox(height: 16),
 
             _SeccionCredencial(
-              titulo: 'ORACLE CLOUD',
+              titulo: 'SERVIDOR (OPCIONAL · YA NO SE USA)',
               icono: Icons.cloud_rounded,
               color: BonolotoTheme.colorInfo,
               descripcion:
-                  'URL de tu instancia Oracle Cloud y token JWT para autenticar el motor de IA. Se genera en tu servidor Oracle Cloud.',
+                  'Ya NO necesitas servidor: las combinaciones del día se descargan solas. Puedes dejar estos campos vacíos.',
               campos: [
                 _CampoCredencial(
                   controller: _oracleUrlCtrl,
