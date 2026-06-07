@@ -35,6 +35,17 @@ LIMITE_HISTORICO = int(os.getenv("LIMITE_HISTORICO", "500"))
 ANIOS_HISTORICO = int(os.getenv("ANIOS_HISTORICO", "3"))
 SALIDA = os.getenv("SALIDA_JSON", os.path.join(RAIZ, "docs", "combinaciones.json"))
 
+# Histórico público de Bonoloto (CSV de Google Sheets, lotoideas.com).
+# El plan gratuito de la API no permite descargar histórico, así que el
+# histórico se toma de aquí y se mantiene al día con /results/bonoloto/latest.
+HISTORICO_CSV_URL = os.getenv(
+    "HISTORICO_CSV_URL",
+    "https://docs.google.com/spreadsheets/d/e/"
+    "2PACX-1vQALTRaLDFfhXOAQmeONPqmFKm9yOiQ4W97rhWgR41BZ7czFsjK5YktD6fnETKHGB9YUnyQ4XBSbhZx"
+    "/pub?gid=0&single=true&output=csv",
+)
+CACHE_CSV = os.path.join(RAIZ, "data", "bonoloto_historico.csv")
+
 
 def _mapear_sorteo(item: dict):
     """Convierte un sorteo de la API al formato que espera el pipeline."""
@@ -59,99 +70,141 @@ def _mapear_sorteo(item: dict):
     }
 
 
-def _extraer_lista(cuerpo):
-    """Saca la lista de sorteos de la respuesta, sea cual sea su envoltorio."""
-    if isinstance(cuerpo, list):
-        return cuerpo
-    if isinstance(cuerpo, dict):
-        d = (cuerpo.get("data") or cuerpo.get("results") or cuerpo.get("sorteos")
-             or cuerpo.get("items") or cuerpo.get("draws"))
-        if isinstance(d, dict):
-            d = (d.get("results") or d.get("items") or d.get("data")
-                 or d.get("sorteos") or d.get("draws"))
-        if isinstance(d, list):
-            return d
-    return []
+def _fecha_iso(texto):
+    """Convierte 'DD/MM/AAAA' (o DD/MM/AA) a 'AAAA-MM-DD'. None si no es fecha."""
+    texto = (texto or "").strip()
+    for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(texto, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return None
 
 
-def _get_resultados(client, headers, params):
-    """GET /results/bonoloto con parámetros; devuelve (lista, cuerpo_crudo)."""
-    url = f"{API_URL}/results/bonoloto"
-    resp = client.get(url, headers=headers, params=params)
-    resp.raise_for_status()
-    cuerpo = resp.json()
-    return _extraer_lista(cuerpo), cuerpo
+def _parsear_csv_historico(texto):
+    """Convierte el CSV (fecha, 6 números, complementario) en sorteos.
+
+    Formato de cada fila: DD/MM/AAAA,n1,n2,n3,n4,n5,n6,complementario
+    (sin reintegro; no es relevante para el análisis). Las filas que no
+    encajen — cabeceras, líneas vacías, datos corruptos — se descartan.
+    """
+    import csv as _csv
+    import io as _io
+    texto = (texto or "").lstrip("\ufeff")  # quita BOM si lo hubiera
+    sorteos = {}
+    for fila in _csv.reader(_io.StringIO(texto)):
+        if len(fila) < 7:
+            continue
+        fecha = _fecha_iso(fila[0])
+        if not fecha:
+            continue  # cabecera o fila no válida
+        try:
+            numeros = [int(str(x).strip()) for x in fila[1:7]]
+        except (ValueError, TypeError):
+            continue
+        if len(numeros) != 6 or not all(1 <= n <= 49 for n in numeros):
+            continue
+        comp = 0
+        if len(fila) >= 8:
+            try:
+                comp = int(str(fila[7]).strip())
+            except (ValueError, TypeError):
+                comp = 0
+        sorteos[fecha] = {
+            "fecha": fecha,
+            "numeros": numeros,
+            "complementario": comp,
+            "reintegro": 0,
+            "bote": 0,
+        }
+    return sorteos
+
+
+def _descargar_csv():
+    """Descarga el CSV del histórico (con reintentos). Devuelve el texto o None."""
+    ultimo_error = None
+    for intento in range(1, 4):
+        try:
+            with httpx.Client(timeout=60, follow_redirects=True) as client:
+                resp = client.get(HISTORICO_CSV_URL)
+                resp.raise_for_status()
+                return resp.text
+        except Exception as e:  # noqa: BLE001
+            ultimo_error = e
+            print(f"  Descarga CSV intento {intento}/3 fallida: {e}")
+            if intento < 3:
+                time.sleep(5)
+    print(f"  No se pudo descargar el CSV del histórico: {ultimo_error}")
+    return None
+
+
+def _obtener_ultimo():
+    """Pide el último sorteo a la API (gratis). Devuelve un sorteo o None."""
+    if not API_KEY:
+        return None
+    headers = {"X-API-Key": API_KEY, "Content-Type": "application/json"}
+    url = f"{API_URL}/results/bonoloto/latest"
+    try:
+        with httpx.Client(timeout=30) as client:
+            resp = client.get(url, headers=headers)
+            resp.raise_for_status()
+            cuerpo = resp.json()
+    except Exception as e:  # noqa: BLE001
+        print(f"  Aviso: no se pudo obtener el último sorteo: {e}")
+        return None
+    dato = cuerpo.get("data") if isinstance(cuerpo, dict) else cuerpo
+    if isinstance(dato, list):
+        dato = dato[0] if dato else None
+    return _mapear_sorteo(dato) if dato else None
 
 
 def descargar_historico():
-    """Descarga el histórico de Bonoloto.
+    """Histórico de Bonoloto.
 
-    La API NO tiene endpoint /history. Los resultados pasados se piden por
-    rango de fechas (from/to con paginación) o por año, sobre /results/bonoloto.
+    El plan gratuito de la API NO permite descargar histórico (años pasados y
+    rangos de fechas devuelven 403 Forbidden). Por eso el histórico se obtiene
+    de un CSV público y abierto, y se mantiene al día con /results/bonoloto/latest
+    (que sí funciona en el plan gratuito).
     """
-    if not API_KEY:
-        raise SystemExit(
-            "ERROR: falta LOTERIAS_API_KEY. Configúralo como secreto en "
-            "GitHub (Settings -> Secrets and variables -> Actions)."
-        )
-    headers = {"X-API-Key": API_KEY, "Content-Type": "application/json"}
-    hoy = datetime.now(timezone.utc).date()
-    desde = (hoy - timedelta(days=365 * ANIOS_HISTORICO)).isoformat()
-    hasta = hoy.isoformat()
-
     sorteos = {}
-    primera_resp = None
 
-    with httpx.Client(timeout=60) as client:
-        # ── Método 1: por rango de fechas, paginando ──
-        for page in range(1, 60):
-            try:
-                datos, cuerpo = _get_resultados(
-                    client, headers,
-                    {"from": desde, "to": hasta, "page": page, "limit": 100},
-                )
-            except Exception as e:  # noqa: BLE001
-                print(f"  [rango] página {page}: error {e}")
-                break
-            if page == 1:
-                primera_resp = cuerpo
-                claves = (list(cuerpo.keys()) if isinstance(cuerpo, dict)
-                          else type(cuerpo).__name__)
-                print(f"  [rango] respuesta claves={claves}; "
-                      f"página 1: {len(datos)} elementos")
-            if not datos:
-                break
-            for item in datos:
-                s = _mapear_sorteo(item)
-                if s:
-                    sorteos[s["fecha"]] = s
-            if len(datos) < 100:
-                break  # última página
-
-        # ── Método 2 (respaldo): por año, si el rango no dio nada ──
+    # 1) Histórico desde el CSV público.
+    texto = _descargar_csv()
+    if texto:
+        sorteos = _parsear_csv_historico(texto)
+        print(f"  CSV histórico: {len(sorteos)} sorteos.")
         if not sorteos:
-            print("  El rango de fechas no devolvió datos. Probando por año...")
-            for year in range(hoy.year, hoy.year - ANIOS_HISTORICO - 1, -1):
-                try:
-                    datos, cuerpo = _get_resultados(client, headers, {"year": year})
-                except Exception as e:  # noqa: BLE001
-                    print(f"  [año {year}]: error {e}")
-                    continue
-                if primera_resp is None:
-                    primera_resp = cuerpo
-                print(f"  [año {year}]: {len(datos)} elementos")
-                for item in datos:
-                    s = _mapear_sorteo(item)
-                    if s:
-                        sorteos[s["fecha"]] = s
+            muestra = texto[:300].replace("\n", " | ")
+            print("  ── El CSV no encajó. Primeros 300 caracteres ──")
+            print("  " + muestra)
+            print("  ───────────────────────────────────────────────")
+        # Copia local de respaldo (best-effort).
+        try:
+            os.makedirs(os.path.dirname(CACHE_CSV), exist_ok=True)
+            with open(CACHE_CSV, "w", encoding="utf-8") as f:
+                f.write(texto)
+        except Exception:  # noqa: BLE001
+            pass
+
+    # 2) Si el CSV falló, usar la copia local de respaldo si existe.
+    if not sorteos and os.path.exists(CACHE_CSV):
+        try:
+            with open(CACHE_CSV, "r", encoding="utf-8") as f:
+                sorteos = _parsear_csv_historico(f.read())
+            print(f"  Respaldo local: {len(sorteos)} sorteos.")
+        except Exception as e:  # noqa: BLE001
+            print(f"  No se pudo leer el respaldo local: {e}")
+
+    # 3) Añadir el último sorteo oficial (mantiene el histórico al día).
+    ultimo = _obtener_ultimo()
+    if ultimo and ultimo.get("fecha"):
+        if ultimo["fecha"] not in sorteos:
+            print(f"  + Último sorteo añadido: {ultimo['fecha']} "
+                  f"{ultimo['numeros']}")
+        sorteos[ultimo["fecha"]] = ultimo
 
     lista = sorted(sorteos.values(), key=lambda s: s["fecha"], reverse=True)
     print(f"  Total sorteos válidos: {len(lista)}.")
-    if not lista and primera_resp is not None:
-        muestra = json.dumps(primera_resp, ensure_ascii=False)[:800]
-        print("  ── Respuesta cruda (primeros 800 caracteres) ──")
-        print("  " + muestra)
-        print("  ───────────────────────────────────────────────")
     return lista
 
 
