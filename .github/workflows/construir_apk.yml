@@ -38,6 +38,11 @@ jobs:
       - name: Descargar dependencias
         run: flutter pub get
 
+      - name: Corregir compatibilidad de colores para Flutter viejo
+        run: |
+          find . -name "*.dart" -type f -exec sed -i "s/\.withValues(alpha: \([^)]*\))/\.withOpacity(\1)/g" {} +
+          find . -name "*.dart" -type f -exec sed -i "s/surfaceContainerHighest/surfaceVariant/g" {} +
+
       - name: Compilar el APK
         # APK de depuración: se instala en cualquier móvil sin firmar nada y
         # ya incluye permiso de Internet (necesario para descargar los datos).
