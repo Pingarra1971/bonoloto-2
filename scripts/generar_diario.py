@@ -31,7 +31,7 @@ from app.domain.apuesta_multiple import calcular_apuestas_multiples  # noqa: E40
 API_URL = "https://api.loteriasapi.com/api/v1"
 API_KEY = os.getenv("LOTERIAS_API_KEY", "").strip()
 CANTIDAD = int(os.getenv("CANTIDAD_COMBINACIONES", "5"))
-LIMITE_HISTORICO = int(os.getenv("LIMITE_HISTORICO", "3000"))
+LIMITE_HISTORICO = int(os.getenv("LIMITE_HISTORICO", "500"))
 SALIDA = os.getenv("SALIDA_JSON", os.path.join(RAIZ, "docs", "combinaciones.json"))
 
 
@@ -88,16 +88,39 @@ def descargar_historico():
             f"ERROR: no se pudo descargar el histórico tras 3 intentos: {ultimo_error}"
         )
 
-    datos = cuerpo.get("data", cuerpo) if isinstance(cuerpo, dict) else cuerpo
-    if isinstance(datos, dict):
-        datos = (datos.get("results") or datos.get("items")
-                 or datos.get("draws") or [datos])
+    # Diagnóstico: ver qué devuelve realmente la API.
+    if isinstance(cuerpo, dict):
+        print(f"  Respuesta: dict con claves {list(cuerpo.keys())}")
+    else:
+        print(f"  Respuesta: {type(cuerpo).__name__}")
+
+    # Extraer la lista de sorteos probando varias estructuras posibles.
+    datos = cuerpo
+    if isinstance(cuerpo, dict):
+        datos = (cuerpo.get("data") or cuerpo.get("sorteos")
+                 or cuerpo.get("results") or cuerpo.get("items")
+                 or cuerpo.get("draws") or [])
+        # A veces la lista está anidada un nivel más adentro.
+        if isinstance(datos, dict):
+            datos = (datos.get("results") or datos.get("sorteos")
+                     or datos.get("items") or datos.get("draws")
+                     or datos.get("data") or [])
+    if not isinstance(datos, list):
+        datos = []
 
     sorteos = []
-    for item in datos or []:
+    for item in datos:
         s = _mapear_sorteo(item)
         if s:
             sorteos.append(s)
+
+    print(f"  Elementos recibidos: {len(datos)}; sorteos válidos: {len(sorteos)}.")
+    if not sorteos:
+        # Mostrar un trozo de la respuesta cruda para diagnosticar el formato.
+        muestra = json.dumps(cuerpo, ensure_ascii=False)[:800]
+        print("  ── Respuesta cruda (primeros 800 caracteres) ──")
+        print("  " + muestra)
+        print("  ───────────────────────────────────────────────")
 
     # Más reciente primero (igual que la base de datos del servidor).
     sorteos.sort(key=lambda s: s["fecha"], reverse=True)
