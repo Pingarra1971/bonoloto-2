@@ -140,6 +140,145 @@ class LoteriasApiService {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SERVICIO DATOS DIARIOS (GitHub)
+//
+// El cálculo ya NO se hace en un servidor en vivo. Cada día, una tarea
+// automática (GitHub Actions) genera las combinaciones y las publica en un
+// fichero JSON público. La app solo tiene que descargarlo. Sin servidor, sin
+// login, sin clave de API.
+// ═══════════════════════════════════════════════════════════
+
+/// Datos del día ya parseados: combinaciones, apuestas múltiples, último
+/// sorteo, estadísticas y rendimiento aproximado por algoritmo.
+class DatosDiarios {
+  final List<CombinacionBonoloto> combinaciones;
+  final Map<String, dynamic>? apuestasMultiples;
+  final ResultadoSorteo? ultimoSorteo;
+  final List<EstadisticasNumero> estadisticas;
+  final List<RendimientoAlgoritmo> rendimientoAlgoritmos;
+  final List<String> mejorasActivas;
+  final DateTime? fechaSorteo;
+  final int totalHistorico;
+
+  const DatosDiarios({
+    this.combinaciones = const [],
+    this.apuestasMultiples,
+    this.ultimoSorteo,
+    this.estadisticas = const [],
+    this.rendimientoAlgoritmos = const [],
+    this.mejorasActivas = const [],
+    this.fechaSorteo,
+    this.totalHistorico = 0,
+  });
+}
+
+class DatosDiariosService {
+  /// URL pública del JSON que genera GitHub Actions cada día.
+  /// Si algún día cambias de repositorio, solo hay que cambiar esta línea.
+  static const String urlJson =
+      'https://raw.githubusercontent.com/Pingarra1971/bonoloto-2/main/docs/combinaciones.json';
+
+  static const Duration _timeout = Duration(seconds: 20);
+
+  Future<DatosDiarios?> descargar() async {
+    try {
+      final response =
+          await http.get(Uri.parse(urlJson)).timeout(_timeout);
+      if (response.statusCode != 200) return null;
+
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if (decoded is! Map) return null;
+      final json = Map<String, dynamic>.from(decoded);
+
+      final combinaciones = (json['combinaciones'] as List? ?? [])
+          .whereType<Map>()
+          .map((c) =>
+              CombinacionBonoloto.fromJson(Map<String, dynamic>.from(c)))
+          .toList();
+
+      ResultadoSorteo? ultimo;
+      if (json['ultimo_sorteo'] is Map) {
+        final us = Map<String, dynamic>.from(json['ultimo_sorteo']);
+        // El "bote" llega en céntimos desde la API; lo pasamos a euros.
+        if (us['bote'] is num) {
+          us['bote'] = (us['bote'] as num) ~/ 100;
+        }
+        ultimo = ResultadoSorteo.fromJson(us);
+      }
+
+      final estadisticas = (json['estadisticas'] as List? ?? [])
+          .whereType<Map>()
+          .map((m) =>
+              EstadisticasNumero.fromJson(Map<String, dynamic>.from(m)))
+          .toList();
+
+      final mejoras = (json['mejoras_activas'] as List? ?? [])
+          .map((e) => e.toString())
+          .toList();
+
+      return DatosDiarios(
+        combinaciones: combinaciones,
+        apuestasMultiples: json['apuestas_multiples'] is Map
+            ? Map<String, dynamic>.from(json['apuestas_multiples'])
+            : null,
+        ultimoSorteo: ultimo,
+        estadisticas: estadisticas,
+        rendimientoAlgoritmos: _derivarRendimiento(combinaciones),
+        mejorasActivas: mejoras,
+        fechaSorteo: json['fecha_sorteo'] != null
+            ? DateTime.tryParse(json['fecha_sorteo'].toString())
+            : null,
+        totalHistorico: (json['total_historico'] is num)
+            ? (json['total_historico'] as num).toInt()
+            : 0,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Rendimiento aproximado por algoritmo: el peso medio que tuvo cada uno en
+  /// las combinaciones del día. Sirve para que el panel "Algoritmos" muestre
+  /// algo coherente sin depender de un servidor.
+  List<RendimientoAlgoritmo> _derivarRendimiento(
+      List<CombinacionBonoloto> combos) {
+    if (combos.isEmpty) return const [];
+    final Map<String, List<double>> pesos = {};
+    for (final c in combos) {
+      c.pesosPorAlgoritmo.forEach((k, v) {
+        (pesos[k] ??= <double>[]).add(v);
+      });
+    }
+    const nombres = {
+      'entropia': 'Entropía',
+      'hot_cold_bias': 'Hot/Cold Bias',
+      'covarianza': 'Covarianza',
+      'lstm': 'LSTM',
+      'transformer': 'Transformer',
+      'markov': 'Markov',
+      'bayesiano': 'Bayesiano',
+      'xgboost': 'XGBoost',
+      'reinforcement_learning': 'Reinforcement Learning',
+      'monte_carlo': 'Monte Carlo',
+    };
+    final lista = <RendimientoAlgoritmo>[];
+    pesos.forEach((clave, valores) {
+      final media =
+          valores.fold<double>(0.0, (a, b) => a + b) / valores.length;
+      lista.add(RendimientoAlgoritmo(
+        nombre: nombres[clave] ?? clave,
+        pesoActual: media,
+        tasaAciertosHistorica: 0.0,
+        totalPredicciones: combos.length,
+        historialPesos: valores,
+      ));
+    });
+    lista.sort((a, b) => b.pesoActual.compareTo(a.pesoActual));
+    return lista;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // SERVICIO TELEGRAM
 // ═══════════════════════════════════════════════════════════
 class TelegramService {
@@ -185,7 +324,7 @@ class TelegramService {
     }
 
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━');
-    buffer.writeln('⚡ Motor: Oracle Cloud | análisis estadístico');
+    buffer.writeln('⚡ Análisis estadístico automático');
     buffer.writeln('🕘 Sorteo: 21:30h hora peninsular');
 
     await enviarMensaje(buffer.toString());
@@ -273,7 +412,7 @@ class ExportService {
     final buffer = StringBuffer();
     buffer.writeln('═══════════════════════════════════════');
     buffer.writeln('    BONOLOTO 2.0');
-    buffer.writeln('    Motor: Oracle Cloud | análisis estadístico');
+    buffer.writeln('    Análisis estadístico automático');
     buffer.writeln('═══════════════════════════════════════\n');
 
     for (int i = 0; i < combinaciones.length; i++) {
