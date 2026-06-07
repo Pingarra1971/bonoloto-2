@@ -18,10 +18,10 @@ class Credenciales {
     this.telegramChatId = '',
   });
 
-  /// True si todos los campos esenciales están configurados.
-  /// Telegram es opcional; no se exige.
-  bool get estaConfigurado =>
-      oracleCloudUrl.isNotEmpty && oracleCloudToken.isNotEmpty;
+  /// El sistema ya NO necesita un servidor propio: las combinaciones del día
+  /// se descargan de una fuente pública (GitHub). Por eso se considera siempre
+  /// configurado. La clave de la API de loterías es opcional (respaldo).
+  bool get estaConfigurado => true;
 
   /// True solo si están las credenciales para enviar notificaciones por Telegram.
   bool get telegramConfigurado =>
