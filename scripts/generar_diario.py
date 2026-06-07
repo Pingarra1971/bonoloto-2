@@ -32,6 +32,7 @@ API_URL = "https://api.loteriasapi.com/api/v1"
 API_KEY = os.getenv("LOTERIAS_API_KEY", "").strip()
 CANTIDAD = int(os.getenv("CANTIDAD_COMBINACIONES", "5"))
 LIMITE_HISTORICO = int(os.getenv("LIMITE_HISTORICO", "500"))
+ANIOS_HISTORICO = int(os.getenv("ANIOS_HISTORICO", "3"))
 SALIDA = os.getenv("SALIDA_JSON", os.path.join(RAIZ, "docs", "combinaciones.json"))
 
 
@@ -58,73 +59,100 @@ def _mapear_sorteo(item: dict):
     }
 
 
+def _extraer_lista(cuerpo):
+    """Saca la lista de sorteos de la respuesta, sea cual sea su envoltorio."""
+    if isinstance(cuerpo, list):
+        return cuerpo
+    if isinstance(cuerpo, dict):
+        d = (cuerpo.get("data") or cuerpo.get("results") or cuerpo.get("sorteos")
+             or cuerpo.get("items") or cuerpo.get("draws"))
+        if isinstance(d, dict):
+            d = (d.get("results") or d.get("items") or d.get("data")
+                 or d.get("sorteos") or d.get("draws"))
+        if isinstance(d, list):
+            return d
+    return []
+
+
+def _get_resultados(client, headers, params):
+    """GET /results/bonoloto con parámetros; devuelve (lista, cuerpo_crudo)."""
+    url = f"{API_URL}/results/bonoloto"
+    resp = client.get(url, headers=headers, params=params)
+    resp.raise_for_status()
+    cuerpo = resp.json()
+    return _extraer_lista(cuerpo), cuerpo
+
+
 def descargar_historico():
-    """Descarga y normaliza el histórico de sorteos desde loteriasapi.com."""
+    """Descarga el histórico de Bonoloto.
+
+    La API NO tiene endpoint /history. Los resultados pasados se piden por
+    rango de fechas (from/to con paginación) o por año, sobre /results/bonoloto.
+    """
     if not API_KEY:
         raise SystemExit(
             "ERROR: falta LOTERIAS_API_KEY. Configúralo como secreto en "
             "GitHub (Settings -> Secrets and variables -> Actions)."
         )
     headers = {"X-API-Key": API_KEY, "Content-Type": "application/json"}
-    url = f"{API_URL}/results/bonoloto/history?limit={LIMITE_HISTORICO}"
+    hoy = datetime.now(timezone.utc).date()
+    desde = (hoy - timedelta(days=365 * ANIOS_HISTORICO)).isoformat()
+    hasta = hoy.isoformat()
 
-    # Reintentos: la API puede fallar puntualmente (red, 5xx, etc.).
-    cuerpo = None
-    ultimo_error = None
-    for intento in range(1, 4):
-        try:
-            with httpx.Client(timeout=60) as client:
-                resp = client.get(url, headers=headers)
-                resp.raise_for_status()
-                cuerpo = resp.json()
-            break
-        except Exception as e:  # noqa: BLE001
-            ultimo_error = e
-            print(f"  Intento {intento}/3 fallido: {e}")
-            if intento < 3:
-                time.sleep(5)
-    if cuerpo is None:
-        raise SystemExit(
-            f"ERROR: no se pudo descargar el histórico tras 3 intentos: {ultimo_error}"
-        )
+    sorteos = {}
+    primera_resp = None
 
-    # Diagnóstico: ver qué devuelve realmente la API.
-    if isinstance(cuerpo, dict):
-        print(f"  Respuesta: dict con claves {list(cuerpo.keys())}")
-    else:
-        print(f"  Respuesta: {type(cuerpo).__name__}")
+    with httpx.Client(timeout=60) as client:
+        # ── Método 1: por rango de fechas, paginando ──
+        for page in range(1, 60):
+            try:
+                datos, cuerpo = _get_resultados(
+                    client, headers,
+                    {"from": desde, "to": hasta, "page": page, "limit": 100},
+                )
+            except Exception as e:  # noqa: BLE001
+                print(f"  [rango] página {page}: error {e}")
+                break
+            if page == 1:
+                primera_resp = cuerpo
+                claves = (list(cuerpo.keys()) if isinstance(cuerpo, dict)
+                          else type(cuerpo).__name__)
+                print(f"  [rango] respuesta claves={claves}; "
+                      f"página 1: {len(datos)} elementos")
+            if not datos:
+                break
+            for item in datos:
+                s = _mapear_sorteo(item)
+                if s:
+                    sorteos[s["fecha"]] = s
+            if len(datos) < 100:
+                break  # última página
 
-    # Extraer la lista de sorteos probando varias estructuras posibles.
-    datos = cuerpo
-    if isinstance(cuerpo, dict):
-        datos = (cuerpo.get("data") or cuerpo.get("sorteos")
-                 or cuerpo.get("results") or cuerpo.get("items")
-                 or cuerpo.get("draws") or [])
-        # A veces la lista está anidada un nivel más adentro.
-        if isinstance(datos, dict):
-            datos = (datos.get("results") or datos.get("sorteos")
-                     or datos.get("items") or datos.get("draws")
-                     or datos.get("data") or [])
-    if not isinstance(datos, list):
-        datos = []
+        # ── Método 2 (respaldo): por año, si el rango no dio nada ──
+        if not sorteos:
+            print("  El rango de fechas no devolvió datos. Probando por año...")
+            for year in range(hoy.year, hoy.year - ANIOS_HISTORICO - 1, -1):
+                try:
+                    datos, cuerpo = _get_resultados(client, headers, {"year": year})
+                except Exception as e:  # noqa: BLE001
+                    print(f"  [año {year}]: error {e}")
+                    continue
+                if primera_resp is None:
+                    primera_resp = cuerpo
+                print(f"  [año {year}]: {len(datos)} elementos")
+                for item in datos:
+                    s = _mapear_sorteo(item)
+                    if s:
+                        sorteos[s["fecha"]] = s
 
-    sorteos = []
-    for item in datos:
-        s = _mapear_sorteo(item)
-        if s:
-            sorteos.append(s)
-
-    print(f"  Elementos recibidos: {len(datos)}; sorteos válidos: {len(sorteos)}.")
-    if not sorteos:
-        # Mostrar un trozo de la respuesta cruda para diagnosticar el formato.
-        muestra = json.dumps(cuerpo, ensure_ascii=False)[:800]
+    lista = sorted(sorteos.values(), key=lambda s: s["fecha"], reverse=True)
+    print(f"  Total sorteos válidos: {len(lista)}.")
+    if not lista and primera_resp is not None:
+        muestra = json.dumps(primera_resp, ensure_ascii=False)[:800]
         print("  ── Respuesta cruda (primeros 800 caracteres) ──")
         print("  " + muestra)
         print("  ───────────────────────────────────────────────")
-
-    # Más reciente primero (igual que la base de datos del servidor).
-    sorteos.sort(key=lambda s: s["fecha"], reverse=True)
-    return sorteos
+    return lista
 
 
 def proxima_fecha_sorteo():
