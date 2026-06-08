@@ -37,23 +37,23 @@ jobs:
           rm -rf android
           flutter create . --platforms=android --project-name bonoloto_2 --org com.pingarra
 
-      - name: Forzar compileSdk 35
-        # Algunos componentes (share_plus y sus dependencias androidx) exigen
-        # compilar contra Android 34 o superior. Fijamos 35 en el proyecto
-        # recién generado (sirve tanto si el fichero es .kts como .gradle).
+      - name: Forzar compileSdk 36
+        # Algunos componentes (share_plus, sqflite, etc. y sus dependencias)
+        # exigen compilar contra Android 36. Lo fijamos en el proyecto recién
+        # generado (sirve tanto si el fichero es .kts como .gradle).
         run: |
           KTS=android/app/build.gradle.kts
           GRADLE=android/app/build.gradle
           if [ -f "$KTS" ]; then
-            sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 35/' "$KTS"
-            sed -i 's/compileSdk = [0-9]\+/compileSdk = 35/' "$KTS"
+            sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' "$KTS"
+            sed -i 's/compileSdk = [0-9]\+/compileSdk = 36/' "$KTS"
             echo "---- $KTS ----"; grep -n "compileSdk" "$KTS" || true
           fi
           if [ -f "$GRADLE" ]; then
-            sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 35/' "$GRADLE"
-            sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 35/' "$GRADLE"
-            sed -i 's/compileSdk [0-9]\+/compileSdk 35/' "$GRADLE"
-            sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 35/' "$GRADLE"
+            sed -i 's/compileSdk flutter.compileSdkVersion/compileSdk 36/' "$GRADLE"
+            sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/' "$GRADLE"
+            sed -i 's/compileSdk [0-9]\+/compileSdk 36/' "$GRADLE"
+            sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 36/' "$GRADLE"
             echo "---- $GRADLE ----"; grep -n "compileSdk" "$GRADLE" || true
           fi
 
