@@ -19,7 +19,7 @@ class UltimoSorteoScreen extends ConsumerStatefulWidget {
 }
 
 class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
-  Future<ResultadoSorteo?>? _futuro;
+  Future<(ResultadoSorteo?, List<CombinacionBonoloto>)>? _futuro;
 
   @override
   void initState() {
@@ -28,23 +28,12 @@ class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
   }
 
   void _cargar() {
-    _futuro = ref.read(appProvider.notifier).obtenerUltimoSorteo();
+    _futuro = ref.read(appProvider.notifier).obtenerSorteoConEvaluacion();
   }
 
   String _fecha(DateTime f) =>
       '${f.day.toString().padLeft(2, '0')}/'
       '${f.month.toString().padLeft(2, '0')}/${f.year}';
-
-  /// Combinaciones más recientes del usuario (sesión actual o último historial).
-  List<CombinacionBonoloto> _combinacionesUsuario() {
-    final estado = ref.watch(appProvider);
-    final actual = estado.sesionActual?.combinaciones ?? const [];
-    if (actual.isNotEmpty) return actual;
-    for (final s in estado.historial) {
-      if (s.combinaciones.isNotEmpty) return s.combinaciones;
-    }
-    return const [];
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,13 +61,15 @@ class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
               'Falta la API key',
               'Para ver el último sorteo, introduce tu API key de '
                   'loteriasapi.com en Ajustes → Credenciales.')
-          : FutureBuilder<ResultadoSorteo?>(
+          : FutureBuilder<(ResultadoSorteo?, List<CombinacionBonoloto>)>(
               future: _futuro,
               builder: (ctx, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final sorteo = snap.data;
+                final sorteo = snap.data?.$1;
+                final evaluadas =
+                    snap.data?.$2 ?? const <CombinacionBonoloto>[];
                 if (sorteo == null) {
                   return _mensaje(
                     theme,
@@ -88,7 +79,7 @@ class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
                         'recargar para volver a intentarlo.',
                   );
                 }
-                return _contenido(theme, sorteo);
+                return _contenido(theme, sorteo, evaluadas);
               },
             ),
     );
@@ -117,9 +108,9 @@ class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
     );
   }
 
-  Widget _contenido(ThemeData theme, ResultadoSorteo sorteo) {
+  Widget _contenido(ThemeData theme, ResultadoSorteo sorteo,
+      List<CombinacionBonoloto> combos) {
     final ganadores = sorteo.numeros.toSet();
-    final combos = _combinacionesUsuario();
 
     int mejor = 0;
     for (final c in combos) {
@@ -166,15 +157,16 @@ class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
         ),
         const SizedBox(height: 22),
 
-        Text('Comparación con tus combinaciones',
+        Text('Combinaciones generadas para este sorteo',
             style: GoogleFonts.rajdhani(
                 fontSize: 18, fontWeight: FontWeight.w700)),
         const SizedBox(height: 12),
 
         if (combos.isEmpty)
           Text(
-            'Aún no has generado combinaciones. Genera alguna en la pestaña '
-            'Inicio y vuelve aquí para compararlas con este sorteo.',
+            'Aún no hay combinaciones anteriores que comparar con este sorteo. '
+            'Cuando se publique el próximo resultado, aquí verás cuántos '
+            'números acertaron las combinaciones de hoy.',
             style: theme.textTheme.bodyMedium,
           )
         else ...[
@@ -195,8 +187,8 @@ class _UltimoSorteoScreenState extends ConsumerState<UltimoSorteoScreen> {
                 Expanded(
                   child: Text(
                     mejor == 0
-                        ? 'Tu mejor combinación no acertó ningún número esta vez.'
-                        : 'Tu mejor combinación acertó $mejor '
+                        ? 'Las combinaciones no acertaron ningún número en este sorteo.'
+                        : 'La mejor combinación acertó $mejor '
                             '${mejor == 1 ? "número" : "números"}.',
                     style: GoogleFonts.rajdhani(
                         fontSize: 16, fontWeight: FontWeight.w600),
