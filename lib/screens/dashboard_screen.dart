@@ -475,7 +475,7 @@ class _TarjetaUltimaPrediccion extends ConsumerWidget {
                 Icon(Icons.history_rounded,
                     color: BonolotoTheme.verdeAccent, size: 20),
                 const SizedBox(width: 8),
-                Text('ÚLTIMA PREDICCIÓN',
+                Text('ÚLTIMAS COMBINACIONES',
                     style: theme.textTheme.labelLarge?.copyWith(
                       letterSpacing: 1.5,
                       color: BonolotoTheme.verdeAccent,
