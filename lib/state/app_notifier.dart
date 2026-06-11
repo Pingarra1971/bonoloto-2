@@ -236,6 +236,27 @@ class AppNotifier extends StateNotifier<AppState> {
     }
   }
 
+  /// Descarga (guarda) las combinaciones como archivo en el dispositivo, sin
+  /// pasar por el menú de compartir. Devuelve la RUTA donde se guardó, o null
+  /// si hubo un error o la lista estaba vacía.
+  Future<String?> descargarCombinaciones(
+    List<CombinacionBonoloto> combinaciones,
+    String formato,
+  ) async {
+    if (combinaciones.isEmpty) return null;
+    try {
+      return await ExportService()
+          .descargarEnDispositivo(combinaciones, formato);
+    } catch (e) {
+      state = state.copyWith(error: 'Error al descargar: $e');
+      return null;
+    }
+  }
+
+  /// Texto plano de las combinaciones, listo para copiar y pegar en otra app.
+  String notaCombinaciones(List<CombinacionBonoloto> combinaciones) =>
+      ExportService().construirNota(combinaciones);
+
   /// Backup manual. Bug #147 (los screens llaman realizarBackup). Alias de hacerBackup.
   Future<bool> realizarBackup() => hacerBackup();
 
@@ -461,6 +482,31 @@ class AppNotifier extends StateNotifier<AppState> {
       }
     }
     return null;
+  }
+
+  /// Devuelve el último sorteo oficial JUNTO CON la predicción que se hizo
+  /// para ese mismo sorteo (la de "ayer"), ya con sus aciertos. Si todavía no
+  /// hay predicción anterior que comparar, la lista va vacía.
+  Future<(ResultadoSorteo?, List<CombinacionBonoloto>)>
+      obtenerSorteoConEvaluacion() async {
+    ResultadoSorteo? sorteo;
+    List<CombinacionBonoloto> evaluadas = const [];
+    try {
+      final datos = await _obtenerDatosDiarios();
+      sorteo = datos?.ultimoSorteo;
+      evaluadas = datos?.prediccionEvaluada ?? const [];
+    } catch (_) {
+      // seguimos al respaldo
+    }
+    if (sorteo == null && state.credenciales.loteriasApiKey.isNotEmpty) {
+      try {
+        sorteo = await LoteriasApiService(state.credenciales)
+            .obtenerUltimoResultado();
+      } catch (_) {
+        // sin respaldo
+      }
+    }
+    return (sorteo, evaluadas);
   }
 
   /// Lee los últimos N sorteos oficiales vía LoteriasApiService si hay API
