@@ -811,33 +811,46 @@ class _PantallaResultados extends ConsumerWidget {
                 )),
             const SizedBox(height: 20),
             _ItemExportar(
-              icono: Icons.picture_as_pdf_rounded,
-              etiqueta: 'Exportar como PDF',
-              color: Colors.redAccent,
-              onTap: () {
-                Navigator.pop(context);
-                provider.exportarCombinaciones(
-                    sesion.combinaciones, 'pdf');
-              },
-            ),
-            _ItemExportar(
               icono: Icons.table_chart_rounded,
-              etiqueta: 'Exportar como Excel/CSV',
+              etiqueta: 'Descargar como CSV',
               color: Colors.green,
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                provider.exportarCombinaciones(
+                final messenger = ScaffoldMessenger.of(context);
+                final ruta = await provider.descargarCombinaciones(
                     sesion.combinaciones, 'csv');
+                messenger.showSnackBar(SnackBar(
+                  content: Text(ruta != null
+                      ? 'Guardado en: $ruta'
+                      : 'No se pudo guardar el archivo'),
+                ));
               },
             ),
             _ItemExportar(
               icono: Icons.text_snippet_rounded,
-              etiqueta: 'Exportar como TXT',
+              etiqueta: 'Descargar como TXT',
               color: BonolotoTheme.colorInfo,
+              onTap: () async {
+                Navigator.pop(context);
+                final messenger = ScaffoldMessenger.of(context);
+                final ruta = await provider.descargarCombinaciones(
+                    sesion.combinaciones, 'txt');
+                messenger.showSnackBar(SnackBar(
+                  content: Text(ruta != null
+                      ? 'Guardado en: $ruta'
+                      : 'No se pudo guardar el archivo'),
+                ));
+              },
+            ),
+            const Divider(height: 8),
+            _ItemExportar(
+              icono: Icons.sticky_note_2_rounded,
+              etiqueta: 'Copiar como nota',
+              color: BonolotoTheme.amarillo,
               onTap: () {
                 Navigator.pop(context);
-                provider.exportarCombinaciones(
-                    sesion.combinaciones, 'txt');
+                mostrarNotaParaCopiar(
+                    context, provider.notaCombinaciones(sesion.combinaciones));
               },
             ),
           ],
