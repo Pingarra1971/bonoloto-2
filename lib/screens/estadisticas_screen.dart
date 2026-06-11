@@ -288,7 +288,7 @@ class _TabConfianza extends ConsumerWidget {
     if (historial.isEmpty) {
       return _SinDatosWidget(
           mensaje:
-              'Aún no hay predicciones.\nRealiza tu primer cálculo para ver la evolución de confianza.');
+              'Aún no hay combinaciones.\nRealiza tu primer cálculo para ver la evolución de confianza.');
     }
 
     final spots = historial.asMap().entries.map((entry) {
@@ -448,7 +448,7 @@ class _TabMapaCalor extends ConsumerWidget {
     if (top10.isEmpty) {
       return _SinDatosWidget(
           mensaje:
-              'No hay datos suficientes.\nGenera más predicciones para ver el mapa de co-ocurrencias.');
+              'No hay datos suficientes.\nGenera más combinaciones para ver el mapa de co-ocurrencias.');
     }
 
     final maxCooc = top10.first.value.toDouble();
@@ -458,7 +458,7 @@ class _TabMapaCalor extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('PARES MÁS FRECUENTES EN PREDICCIONES',
+          Text('PARES MÁS FRECUENTES EN COMBINACIONES',
               style: GoogleFonts.rajdhani(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -767,7 +767,7 @@ class _TabRendimientoAlgoritmos extends ConsumerWidget {
                         style: GoogleFonts.spaceMono(fontSize: 14),
                       ),
                       Text(
-                        '${alg.totalPredicciones} predicciones',
+                        '${alg.totalPredicciones} combinaciones',
                         style: GoogleFonts.spaceMono(
                           fontSize: 14,
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
