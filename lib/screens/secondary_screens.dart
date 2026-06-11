@@ -35,7 +35,7 @@ class HistorialScreen extends ConsumerWidget {
                       color: BonolotoTheme.verdeAccent, size: 56),
                   const SizedBox(height: 16),
                   Text(
-                    'Sin predicciones aún',
+                    'Sin combinaciones aún',
                     style: GoogleFonts.rajdhani(
                         fontSize: 20, fontWeight: FontWeight.w600),
                   ),
@@ -235,33 +235,55 @@ class _TarjetaSesion extends ConsumerWidget {
                     color: BonolotoTheme.verdeAccent)),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.picture_as_pdf_rounded,
-                  color: Colors.redAccent),
-              title: Text('PDF',
-                  style: GoogleFonts.rajdhani(fontWeight: FontWeight.w600)),
-              onTap: () {
-                Navigator.pop(context);
-                provider.exportarCombinaciones(combinaciones, 'pdf');
-              },
-            ),
-            ListTile(
               leading:
                   const Icon(Icons.table_chart_rounded, color: Colors.green),
-              title: Text('Excel / CSV',
+              title: Text('Descargar como CSV',
                   style: GoogleFonts.rajdhani(fontWeight: FontWeight.w600)),
-              onTap: () {
+              subtitle: Text('Guarda el archivo en el dispositivo',
+                  style: GoogleFonts.rajdhani(fontSize: 13)),
+              onTap: () async {
                 Navigator.pop(context);
-                provider.exportarCombinaciones(combinaciones, 'csv');
+                final messenger = ScaffoldMessenger.of(context);
+                final ruta = await provider.descargarCombinaciones(
+                    combinaciones, 'csv');
+                messenger.showSnackBar(SnackBar(
+                  content: Text(ruta != null
+                      ? 'Guardado en: $ruta'
+                      : 'No se pudo guardar el archivo'),
+                ));
               },
             ),
             ListTile(
               leading: const Icon(Icons.text_snippet_rounded,
                   color: BonolotoTheme.colorInfo),
-              title: Text('TXT',
+              title: Text('Descargar como TXT',
                   style: GoogleFonts.rajdhani(fontWeight: FontWeight.w600)),
+              subtitle: Text('Guarda el archivo en el dispositivo',
+                  style: GoogleFonts.rajdhani(fontSize: 13)),
+              onTap: () async {
+                Navigator.pop(context);
+                final messenger = ScaffoldMessenger.of(context);
+                final ruta = await provider.descargarCombinaciones(
+                    combinaciones, 'txt');
+                messenger.showSnackBar(SnackBar(
+                  content: Text(ruta != null
+                      ? 'Guardado en: $ruta'
+                      : 'No se pudo guardar el archivo'),
+                ));
+              },
+            ),
+            const Divider(height: 8),
+            ListTile(
+              leading: const Icon(Icons.sticky_note_2_rounded,
+                  color: BonolotoTheme.amarillo),
+              title: Text('Copiar como nota',
+                  style: GoogleFonts.rajdhani(fontWeight: FontWeight.w600)),
+              subtitle: Text('Texto para pegar en WhatsApp, Notas...',
+                  style: GoogleFonts.rajdhani(fontSize: 13)),
               onTap: () {
                 Navigator.pop(context);
-                provider.exportarCombinaciones(combinaciones, 'txt');
+                mostrarNotaParaCopiar(
+                    context, provider.notaCombinaciones(combinaciones));
               },
             ),
           ],
@@ -284,7 +306,7 @@ class TutorialScreen extends ConsumerWidget {
       color: Color(0xFF00D4FF),
       capa: 'MEJORA 1 — PERIODICIDAD',
       descripcion:
-          'Aplica la Transformada Rápida de Fourier sobre la serie temporal de apariciones de cada número. Detecta ciclos dominantes (periodos en número de sorteos) y puntúa más alto los números cuyo próximo pico de ciclo está más cercano. Activo desde el primer día con datos históricos reales.',
+          'Aplica la Transformada Rápida de Fourier sobre la serie temporal de apariciones de cada número. Detecta ciclos dominantes (periodos en número de sorteos) y resalta los números cuyo ciclo está en fase. Nota honesta: un ciclo observado en el pasado no dice qué número saldrá; en un sorteo aleatorio esos ciclos son ruido y no anticipan el resultado. Activo desde el primer día con datos históricos reales.',
       fortaleza: 'Detección de patrones cíclicos ocultos',
     ),
     _InfoAlgoritmo(
@@ -293,7 +315,7 @@ class TutorialScreen extends ConsumerWidget {
       color: Color(0xFFB84FFF),
       capa: 'MEJORA 2 — ANOMALÍAS',
       descripcion:
-          'Detecta y filtra automáticamente sorteos estadísticamente anómalos antes de entrenar los modelos. Construye árboles de aislamiento: los sorteos anómalos se aíslan más rápido que los normales. Evita que datos "envenenados" distorsionen las predicciones. Nunca filtra más del 10% del histórico.',
+          'Detecta y filtra automáticamente sorteos estadísticamente anómalos antes de entrenar los modelos. Construye árboles de aislamiento: los sorteos anómalos se aíslan más rápido que los normales. Evita que datos "envenenados" distorsionen el análisis. Nunca filtra más del 10% del histórico.',
       fortaleza: 'Limpieza automática de datos atípicos',
     ),
     _InfoAlgoritmo(
@@ -365,7 +387,7 @@ class TutorialScreen extends ConsumerWidget {
       color: Color(0xFF39C96E),
       capa: 'CAPA 2 — SERIES TEMPORALES',
       descripcion:
-          'Red neuronal recurrente especializada en memorizar dependencias a largo plazo en secuencias de datos. Analiza el histórico completo de sorteos como una serie temporal y aprende qué patrones de números tienden a seguir a otros.',
+          'Red neuronal recurrente que analiza el histórico de sorteos como una serie temporal. Nota honesta: en un sorteo aleatorio no existen patrones por los que un número siga a otro; la red solo ajusta ruido del pasado y no predice ni anticipa el resultado.',
       fortaleza: 'Memoria a largo plazo de secuencias',
     ),
     _InfoAlgoritmo(
@@ -383,7 +405,7 @@ class TutorialScreen extends ConsumerWidget {
       color: Color(0xFF00BFFF),
       capa: 'CAPA 2 — SERIES TEMPORALES',
       descripcion:
-          'Modela las transiciones entre estados: qué números tienen más probabilidad de aparecer dado el resultado del sorteo anterior. Construye una matriz de transición que captura dependencias entre sorteos consecutivos.',
+          'Modela las transiciones entre estados a partir del histórico. Nota honesta: cada sorteo es independiente del anterior, así que estas "dependencias" son ruido estadístico; sirven para observar, no para predecir el siguiente resultado.',
       fortaleza: 'Dependencias entre sorteos consecutivos',
     ),
     _InfoAlgoritmo(
@@ -392,7 +414,7 @@ class TutorialScreen extends ConsumerWidget {
       color: Color(0xFFFF4FA0),
       capa: 'CAPA 3 — APRENDIZAJE',
       descripcion:
-          'Actualiza las probabilidades de cada número de forma continua tras cada nuevo sorteo usando el Teorema de Bayes. Combina el conocimiento previo (histórico) con la nueva evidencia (último resultado) para refinar las predicciones.',
+          'Actualiza las probabilidades de cada número de forma continua tras cada nuevo sorteo usando el Teorema de Bayes. Combina el conocimiento previo (histórico) con la nueva evidencia (último resultado) para refinar el análisis.',
       fortaleza: 'Actualización continua de probabilidades',
     ),
     _InfoAlgoritmo(
@@ -578,7 +600,7 @@ class TutorialScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'No confía ciegamente en ningún algoritmo. Aprende cuál ha tenido mejor rendimiento histórico y ajusta los pesos dinámicamente. Combina los 11 resultados en una predicción final con convergencia automática: sigue iterando hasta que no puede mejorar más el índice de confianza.',
+                      'No confía ciegamente en ningún algoritmo. Aprende cuál ha tenido mejor rendimiento histórico y ajusta los pesos dinámicamente. Combina los 11 resultados en una combinación final con convergencia automática: sigue iterando hasta que no puede mejorar más el índice de confianza.',
                       style: GoogleFonts.spaceMono(fontSize: 15, height: 1.6),
                     ),
                   ],
