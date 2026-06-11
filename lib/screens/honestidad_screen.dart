@@ -269,7 +269,7 @@ class _HonestidadScreenState extends ConsumerState<HonestidadScreen> {
           if (bt.nPredicciones > 0) ...[
             const SizedBox(height: 12),
             Text(
-              'Basado en ${bt.nPredicciones} predicciones sobre '
+              'Basado en ${bt.nPredicciones} combinaciones sobre '
               '${bt.nSorteos} sorteos.',
               style: GoogleFonts.rajdhani(
                 fontSize: 15,
