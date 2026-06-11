@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
@@ -260,4 +261,69 @@ class SeparadorEtiqueta extends StatelessWidget {
       ),
     );
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTA PARA COPIAR Y PEGAR
+// Muestra las combinaciones como texto seleccionable con un botón que las
+// copia al portapapeles, para pegarlas en WhatsApp, Notas, correo, etc.
+// ═══════════════════════════════════════════════════════════
+void mostrarNotaParaCopiar(BuildContext context, String texto) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Theme.of(ctx).cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      title: Row(
+        children: [
+          const Icon(Icons.sticky_note_2_rounded,
+              color: BonolotoTheme.amarillo, size: 22),
+          const SizedBox(width: 8),
+          Text('Nota para copiar',
+              style: GoogleFonts.rajdhani(fontWeight: FontWeight.w700)),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Container(
+          width: double.maxFinite,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: SelectableText(
+            texto,
+            style: const TextStyle(
+                fontFamily: 'monospace', fontSize: 14, height: 1.45),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text('Cerrar',
+              style: GoogleFonts.rajdhani(fontWeight: FontWeight.w600)),
+        ),
+        ElevatedButton.icon(
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: texto));
+            if (!ctx.mounted) return;
+            Navigator.pop(ctx);
+            ScaffoldMessenger.of(ctx).showSnackBar(
+              const SnackBar(
+                  content: Text('Combinaciones copiadas al portapapeles')),
+            );
+          },
+          icon: const Icon(Icons.copy_rounded, size: 18),
+          label: Text('Copiar',
+              style: GoogleFonts.rajdhani(fontWeight: FontWeight.w700)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: BonolotoTheme.verdeAccent,
+            foregroundColor: const Color(0xFF081209),
+          ),
+        ),
+      ],
+    ),
+  );
 }
