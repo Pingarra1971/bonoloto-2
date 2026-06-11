@@ -1,5 +1,11 @@
 name: Construir APK (app Android)
 
+# Cuándo se ejecuta:
+#  - Solo a mano: pestaña "Actions" -> "Construir APK (app Android)"
+#    -> botón "Run workflow". (No se ejecuta solo para no gastar minutos.)
+#
+# Qué hace: monta el proyecto Android, compila la app y deja el APK como
+# "artefacto" descargable al final de la ejecución. Lo instalas en el móvil.
 on:
   workflow_dispatch: {}
 
@@ -17,16 +23,24 @@ jobs:
           java-version: "17"
 
       - name: Preparar Flutter
+        # Usamos la última versión estable de Flutter: la app usa APIs modernas
+        # (CardThemeData, Color.withValues...) que las versiones antiguas no
+        # conocen. Con "stable" sin fijar versión, siempre coge la más reciente.
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
       - name: Generar el proyecto Android
+        # El repositorio solo guarda el código (lib/). Este paso crea la
+        # carpeta nativa de Android sin tocar tu código ni el pubspec.
         run: |
           rm -rf android
           flutter create . --platforms=android --project-name bonoloto_2 --org com.pingarra
 
       - name: Forzar compileSdk 36
+        # 1) En el módulo de la app. 2) En TODOS los módulos (incluidos los
+        # plugins como share_plus, que tienen su propia versión) mediante un
+        # init script de Gradle que se aplica a toda la compilación.
         run: |
           KTS=android/app/build.gradle.kts
           GRADLE=android/app/build.gradle
@@ -38,11 +52,27 @@ jobs:
             sed -i -E 's/^([[:space:]]*)compileSdk(Version)?[[:space:]]+.*/\1compileSdk 36/' "$GRADLE"
             echo "---- $GRADLE ----"; grep -n "compileSdk" "$GRADLE" || true
           fi
+          mkdir -p ~/.gradle/init.d
+          {
+            echo 'allprojects {'
+            echo '    afterEvaluate { project ->'
+            echo "        if (project.hasProperty('android')) {"
+            echo '            project.android {'
+            echo '                compileSdkVersion 36'
+            echo '            }'
+            echo '        }'
+            echo '    }'
+            echo '}'
+          } > ~/.gradle/init.d/forceCompileSdk.gradle
+          echo "---- init script (todos los modulos) ----"
+          cat ~/.gradle/init.d/forceCompileSdk.gradle
 
       - name: Descargar dependencias
         run: flutter pub get
 
       - name: Compilar el APK
+        # APK de depuración: se instala en cualquier móvil sin firmar nada y
+        # ya incluye permiso de Internet (necesario para descargar los datos).
         run: flutter build apk --debug
 
       - name: Publicar el APK como artefacto descargable
