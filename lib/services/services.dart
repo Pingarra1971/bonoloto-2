@@ -160,6 +160,11 @@ class DatosDiarios {
   final DateTime? fechaSorteo;
   final int totalHistorico;
 
+  /// Predicción que se hizo PARA el último sorteo (la de "ayer"), ya con los
+  /// aciertos calculados contra el resultado real. Vacía si no hay nada que
+  /// comparar todavía.
+  final List<CombinacionBonoloto> prediccionEvaluada;
+
   const DatosDiarios({
     this.combinaciones = const [],
     this.apuestasMultiples,
@@ -169,6 +174,7 @@ class DatosDiarios {
     this.mejorasActivas = const [],
     this.fechaSorteo,
     this.totalHistorico = 0,
+    this.prediccionEvaluada = const [],
   });
 }
 
@@ -216,6 +222,18 @@ class DatosDiariosService {
           .map((e) => e.toString())
           .toList();
 
+      // Predicción del día anterior (la que se hizo PARA el último sorteo),
+      // con los aciertos ya calculados por el backend.
+      List<CombinacionBonoloto> prediccionEvaluada = const [];
+      if (json['evaluacion'] is Map) {
+        final ev = Map<String, dynamic>.from(json['evaluacion']);
+        prediccionEvaluada = (ev['predicciones'] as List? ?? [])
+            .whereType<Map>()
+            .map((p) =>
+                CombinacionBonoloto.fromJson(Map<String, dynamic>.from(p)))
+            .toList();
+      }
+
       return DatosDiarios(
         combinaciones: combinaciones,
         apuestasMultiples: json['apuestas_multiples'] is Map
@@ -231,6 +249,7 @@ class DatosDiariosService {
         totalHistorico: (json['total_historico'] is num)
             ? (json['total_historico'] as num).toInt()
             : 0,
+        prediccionEvaluada: prediccionEvaluada,
       );
     } catch (e) {
       return null;
@@ -429,6 +448,107 @@ class ExportService {
       buffer.writeln('');
     }
     await archivo.writeAsString(buffer.toString());
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // DESCARGA DIRECTA (sin menú de compartir) — guarda el archivo en el
+  // dispositivo y devuelve la ruta donde quedó guardado.
+  // ─────────────────────────────────────────────────────────
+  Future<String> descargarEnDispositivo(
+    List<CombinacionBonoloto> combinaciones,
+    String formato,
+  ) async {
+    final fmt = formato.toLowerCase();
+    final ext = fmt == 'csv' ? 'csv' : 'txt';
+    final marca = DateTime.now().millisecondsSinceEpoch;
+    final nombre = 'bonoloto_combinaciones_$marca.$ext';
+    final contenido =
+        fmt == 'csv' ? _contenidoCsv(combinaciones) : _contenidoTxt(combinaciones);
+
+    final destino = await _directorioDescargas();
+    final archivo = File('${destino.path}/$nombre');
+    await archivo.writeAsString(contenido);
+    return archivo.path;
+  }
+
+  /// Elige dónde guardar: primero la carpeta pública de Descargas (visible en
+  /// el explorador de archivos); si no es accesible (Android moderno), usa un
+  /// directorio propio de la app que SIEMPRE es escribible sin permisos.
+  Future<Directory> _directorioDescargas() async {
+    try {
+      final publica = Directory('/storage/emulated/0/Download');
+      if (await publica.exists()) {
+        // Comprobamos que realmente podemos escribir ahí.
+        final prueba = File('${publica.path}/.bonoloto_w');
+        await prueba.writeAsString('ok');
+        await prueba.delete();
+        return publica;
+      }
+    } catch (_) {
+      // Sin acceso a la carpeta pública: caemos al almacenamiento de la app.
+    }
+    final externo = await getExternalStorageDirectory();
+    if (externo != null) return externo;
+    return getApplicationDocumentsDirectory();
+  }
+
+  String _contenidoCsv(List<CombinacionBonoloto> combinaciones) {
+    final buffer = StringBuffer();
+    buffer.writeln('N1,N2,N3,N4,N5,N6,Confianza(%),Fecha,Aciertos');
+    for (final combo in combinaciones) {
+      buffer.writeln(
+          '${combo.numeros.join(",")},${combo.indiceConfianza.toStringAsFixed(1)},${combo.fechaGeneracion.toIso8601String()},${combo.aciertos ?? "-"}');
+    }
+    return buffer.toString();
+  }
+
+  String _contenidoTxt(List<CombinacionBonoloto> combinaciones) {
+    final buffer = StringBuffer();
+    buffer.writeln('═══════════════════════════════════════');
+    buffer.writeln('    BONOLOTO 2.0');
+    buffer.writeln('    Análisis estadístico automático');
+    buffer.writeln('═══════════════════════════════════════\n');
+    for (int i = 0; i < combinaciones.length; i++) {
+      final combo = combinaciones[i];
+      buffer.writeln('Combinación ${i + 1}:');
+      buffer.writeln('  Números: ${combo.numerosFormateados}');
+      buffer.writeln(
+          '  Confianza: ${combo.indiceConfianza.toStringAsFixed(1)}%');
+      buffer.writeln(
+          '  Generada: ${combo.fechaGeneracion.day}/${combo.fechaGeneracion.month}/${combo.fechaGeneracion.year}');
+      if (combo.aciertos != null) {
+        buffer.writeln('  Aciertos: ${combo.aciertos}');
+      }
+      buffer.writeln('');
+    }
+    buffer.writeln('Recuerda: jugar es azar. La probabilidad del pleno es '
+        '1 entre 13.983.816 para cualquier combinación.');
+    return buffer.toString();
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // NOTA EN TEXTO PLANO — pensada para copiar y pegar en otra app
+  // (WhatsApp, Notas, correo...). Compacta y clara.
+  // ─────────────────────────────────────────────────────────
+  String construirNota(List<CombinacionBonoloto> combinaciones) {
+    final buffer = StringBuffer();
+    final f = DateTime.now();
+    final fecha = '${f.day.toString().padLeft(2, '0')}/'
+        '${f.month.toString().padLeft(2, '0')}/${f.year}';
+    buffer.writeln('Bonoloto 2.0 — Combinaciones');
+    buffer.writeln(fecha);
+    buffer.writeln('');
+    for (int i = 0; i < combinaciones.length; i++) {
+      final nums = combinaciones[i]
+          .numeros
+          .map((n) => n.toString().padLeft(2, '0'))
+          .join(' - ');
+      buffer.writeln('${i + 1}) $nums');
+    }
+    buffer.writeln('');
+    buffer.write('Recuerda: jugar es azar. La probabilidad del pleno es '
+        '1 entre 13.983.816 para cualquier combinación.');
+    return buffer.toString();
   }
 }
 
