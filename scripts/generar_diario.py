@@ -24,9 +24,12 @@ import httpx
 # Permite importar el paquete app/ desde la raíz del repositorio.
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RAIZ)
+# Y los módulos nuevos que viven en esta misma carpeta (scripts/).
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.services.pipeline.pipeline_v4 import PipelineV4  # noqa: E402
 from app.domain.apuesta_multiple import calcular_apuestas_multiples  # noqa: E402
+import sistema_garantizado  # noqa: E402  (Fase A: sistema con garantía)
 
 API_URL = "https://api.loteriasapi.com/api/v1"
 API_KEY = os.getenv("LOTERIAS_API_KEY", "").strip()
@@ -284,6 +287,48 @@ def calcular_estadisticas(sorteos):
     return stats
 
 
+def _evaluacion_anterior(ruta, ultimo_sorteo):
+    """Lee el archivo del día anterior y, si su predicción era PARA el sorteo
+    que acaba de celebrarse, calcula cuántos números acertó cada combinación.
+
+    Devuelve un dict 'evaluacion' o None si no hay nada que comparar (por
+    ejemplo, la primera vez o si no coinciden las fechas)."""
+    if not ultimo_sorteo:
+        return None
+    try:
+        with open(ruta, "r", encoding="utf-8") as f:
+            previo = json.load(f)
+    except (FileNotFoundError, ValueError):
+        return None
+    prev_fecha = previo.get("fecha_sorteo")
+    prev_combos = previo.get("combinaciones") or []
+    fecha_resultado = ultimo_sorteo.get("fecha")
+    # Solo comparamos si la predicción anterior era justo para este sorteo.
+    if not prev_fecha or not prev_combos or prev_fecha != fecha_resultado:
+        return None
+    ganadores = set(ultimo_sorteo.get("numeros") or [])
+    predicciones = []
+    mejor = 0
+    for c in prev_combos:
+        nums = c.get("numeros") if isinstance(c, dict) else None
+        if not nums:
+            continue
+        aciertos = len(set(nums) & ganadores)
+        if aciertos > mejor:
+            mejor = aciertos
+        predicciones.append({"numeros": list(nums), "aciertos": aciertos})
+    if not predicciones:
+        return None
+    return {
+        "fecha_sorteo": prev_fecha,
+        "numeros_ganadores": list(ultimo_sorteo.get("numeros") or []),
+        "complementario": ultimo_sorteo.get("complementario"),
+        "reintegro": ultimo_sorteo.get("reintegro"),
+        "predicciones": predicciones,
+        "mejor_aciertos": mejor,
+    }
+
+
 async def main():
     print("→ Descargando histórico de Bonoloto...")
     sorteos = descargar_historico()
@@ -307,16 +352,57 @@ async def main():
     except Exception as e:  # noqa: BLE001
         print(f"  Aviso: no se pudieron calcular apuestas múltiples: {e}")
 
+    # IMPORTANTE: leer la predicción del día anterior ANTES de sobrescribir el
+    # archivo, para comparar esa predicción con el resultado que acaba de salir.
+    evaluacion = _evaluacion_anterior(SALIDA, sorteos[0] if sorteos else None)
+
+    fecha_sorteo = proxima_fecha_sorteo()
+
+    # Fase A — Sistema de apuestas con garantía combinatoria verificada
+    # (pool anti-popular + wheel). Determinista: misma fecha ⇒ mismo sistema.
+    #
+    # Política de errores (importante):
+    #  - Si la garantía NO se verifica por fuerza bruta, generar_sistema_diario
+    #    hace SystemExit y el workflow se pone en ROJO. Jamás publicamos un
+    #    sistema sin garantía real. (No lo capturamos: debe propagarse.)
+    #  - Si falla por cualquier OTRO motivo inesperado (un error puntual), lo
+    #    registramos y seguimos publicando el JSON v1 de siempre, para no dejar
+    #    a la app sin su actualización diaria.
+    sistema_v2 = None
+    print("→ Construyendo sistema garantizado "
+          f"(pool {sistema_garantizado.POOL_SIZE}, garantía "
+          f"'{sistema_garantizado.GARANTIA_T} si "
+          f"{sistema_garantizado.GARANTIA_P}')...")
+    try:
+        sistema_v2 = sistema_garantizado.generar_sistema_diario(fecha_sorteo)
+        print(f"  ✓ {sistema_v2['sistema']['n_apuestas']} apuestas, "
+              f"{sistema_v2['sistema']['coste_eur']} EUR, garantía verificada.")
+    except Exception as e:  # noqa: BLE001  (SystemExit NO es Exception: se propaga)
+        print(f"  AVISO: no se pudo generar el sistema v2 ({e}). "
+              "Se publica el JSON v1 sin el bloque 'sistema'.")
+
     salida = {
         "generado": datetime.now(timezone.utc).isoformat(),
-        "fecha_sorteo": proxima_fecha_sorteo(),
+        "fecha_sorteo": fecha_sorteo,
         "total_historico": len(sorteos),
         "estadisticas": calcular_estadisticas(sorteos),
         "ultimo_sorteo": sorteos[0] if sorteos else None,
+        "evaluacion": evaluacion,
         "combinaciones": resultado.combinaciones,
         "apuestas_multiples": apuestas_multiples,
         "mejoras_activas": list(getattr(resultado, "mejoras_activas", []) or []),
     }
+
+    # ── Esquema v2 (retrocompatible): solo si el sistema se generó bien.
+    # La app v1 ignora estas claves; la app v2 (Fase B) las aprovechará.
+    if sistema_v2 is not None:
+        salida["version_esquema"] = 2
+        salida["fecha"] = fecha_sorteo  # alias del esquema v2
+        salida["sistema"] = sistema_v2["sistema"]
+        salida["apuestas"] = sistema_v2["apuestas"]
+        salida["honestidad"] = sistema_v2["honestidad"]
+    else:
+        salida["version_esquema"] = 1
 
     os.makedirs(os.path.dirname(SALIDA), exist_ok=True)
     salida = _a_nativo(salida)  # numpy -> tipos nativos (JSON con números reales)
