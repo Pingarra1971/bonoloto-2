@@ -88,11 +88,80 @@ def elegir_pool_antipopular(fecha: str, tam: int = POOL_SIZE,
     return mejor_pool
 
 
+def _elegir_pool(fecha: str, pool_size: int, pool_base=None):
+    """Devuelve el pool de `pool_size` números.
+
+    - Si se pasa `pool_base` (un ranking de números, p. ej. el que sale del
+      motor de los 115 algoritmos), usa sus primeros `pool_size` válidos.
+    - Si no, recurre a la selección anti-popular.
+    Honesto: elegir el pool con los algoritmos NO sube la probabilidad; solo
+    decide QUÉ números forman tu grupo (la garantía funciona igual con
+    cualquiera).
+    """
+    if pool_base:
+        vistos = []
+        for n in pool_base:
+            n = int(n)
+            if 1 <= n <= 49 and n not in vistos:
+                vistos.append(n)
+            if len(vistos) >= pool_size:
+                break
+        if len(vistos) < pool_size:  # completar si el motor diera pocos
+            for n in elegir_pool_antipopular(fecha, tam=pool_size):
+                if n not in vistos:
+                    vistos.append(n)
+                if len(vistos) >= pool_size:
+                    break
+        return sorted(vistos[:pool_size])
+    return elegir_pool_antipopular(fecha, tam=pool_size)
+
+
+def _verifica_garantia(apuestas, pool, t, p) -> bool:
+    """Garantía 't si p' por fuerza bruta: si salen p números del pool,
+    alguna apuesta tiene al menos t de ellos."""
+    setap = [set(a) for a in apuestas]
+    for combo in combinations(pool, p):
+        cs = set(combo)
+        if not any(len(s & cs) >= t for s in setap):
+            return False
+    return True
+
+
+def _quitar_redundantes(apuestas, pool, t, p):
+    """OPCIÓN 2 — eficiencia: quita apuestas que NO hacen falta para la
+    garantía (misma garantía, menos apuestas, menos coste). Una apuesta solo se
+    elimina si cada p-subconjunto que ella cubre sigue cubierto por otra, así
+    que la garantía nunca se rompe. Eficiente: usa conteo de cobertura."""
+    ap = [tuple(sorted(a)) for a in apuestas]
+    psubs = list(combinations(sorted(pool), p))
+    cubre, cuenta = [], {s: 0 for s in psubs}
+    for a in ap:
+        sa = set(a)
+        cs = [s for s in psubs if len(sa & set(s)) >= t]
+        cubre.append(cs)
+        for s in cs:
+            cuenta[s] += 1
+    quitar = set()
+    cambio = True
+    while cambio:
+        cambio = False
+        for i in range(len(ap)):
+            if i in quitar:
+                continue
+            if cubre[i] and all(cuenta[s] >= 2 for s in cubre[i]):
+                for s in cubre[i]:
+                    cuenta[s] -= 1
+                quitar.add(i)
+                cambio = True
+    return [list(a) for i, a in enumerate(ap) if i not in quitar]
+
+
 def generar_sistema_diario(fecha: str,
                            pool_size: int = POOL_SIZE,
                            t: int = GARANTIA_T,
                            p: int = GARANTIA_P,
-                           precio: float = PRECIO) -> dict:
+                           precio: float = PRECIO,
+                           pool_base=None) -> dict:
     """Devuelve {'sistema': ..., 'apuestas': ..., 'honestidad': ...}.
 
     ABORTA el proceso (SystemExit) si la verificación por fuerza bruta
@@ -107,7 +176,7 @@ def generar_sistema_diario(fecha: str,
     if not (3 <= t <= p <= 6):
         raise SystemExit(f"ERROR: garantía '{t} si {p}' no válida.")
 
-    pool = elegir_pool_antipopular(fecha, tam=pool_size)
+    pool = _elegir_pool(fecha, pool_size, pool_base)
 
     if p > t:
         # Wheel abreviado "t si p" (mucho más barato que la cobertura plena).
@@ -135,6 +204,18 @@ def generar_sistema_diario(fecha: str,
         fuente = getattr(sistema, "fuente", "greedy_local")
         schonheim = getattr(sistema, "schonheim", None)
         optimo = bool(getattr(sistema, "optimo_demostrado", False))
+
+    # OPCIÓN 2 (eficiencia): quitar apuestas redundantes -> misma garantía,
+    # menos coste. Nunca empeora; en el peor caso deja el sistema igual.
+    n_antes = len(apuestas)
+    apuestas = _quitar_redundantes(apuestas, pool, t, p)
+    n_apuestas = len(apuestas)
+    coste = round(n_apuestas * precio, 2)
+    if n_apuestas < n_antes:
+        print(f"  Eficiencia: {n_antes} -> {n_apuestas} apuestas "
+              f"(-{n_antes - n_apuestas}).")
+    # La verificación NUNCA se omite: reverificamos el sistema YA reducido.
+    verificada = _verifica_garantia(apuestas, pool, t, p)
 
     # Regla 3 del prompt: la verificación NUNCA se omite ni se perdona.
     if not verificada:
@@ -176,6 +257,71 @@ def generar_sistema_diario(fecha: str,
             "scorers_superan_azar": [],      # se rellenará en la Fase C
         },
     }
+
+
+def probabilidades_categoria() -> dict:
+    """Probabilidad REAL de cada categoría de premio de la Bonoloto para UNA
+    apuesta de 6 números (hipergeométrica exacta). No depende de qué números
+    elijas: el sorteo es uniforme."""
+    from math import comb
+    C = comb(49, 6)  # 13 983 816
+    formas = {
+        "3": comb(6, 3) * comb(43, 3),          # 5ª categoría
+        "4": comb(6, 4) * comb(43, 2),          # 4ª categoría
+        "5": comb(6, 5) * comb(43, 1) - comb(6, 5),  # 3ª (5 sin complementario)
+        "5C": comb(6, 5),                        # 2ª (5 + complementario)
+        "6": 1,                                  # 1ª (pleno)
+    }
+    return {
+        k: {"formas": w, "una_entre": round(C / w), "prob": w / C}
+        for k, w in formas.items()
+    }
+
+
+# Los 3 niveles de garantía que se ofrecen al usuario. De más barato y débil a
+# más caro y fuerte. Todos con garantía VERIFICADA por fuerza bruta.
+PRESETS_SISTEMAS = [
+    ("Económico",
+     "Pocas apuestas y barato. Garantiza un 3 si aciertas 4 de tus números.",
+     dict(pool_size=10, t=3, p=4)),
+    ("Equilibrado",
+     "El punto medio recomendado. Garantiza un 4 si aciertas 5 de tus números.",
+     dict(pool_size=12, t=4, p=5)),
+    ("Fuerte",
+     "Más apuestas y más caro, pero la garantía salta más fácil: un 4 si "
+     "aciertas solo 4 de tus números.",
+     dict(pool_size=12, t=4, p=4)),
+]
+
+
+def generar_sistemas_diarios(fecha: str, precio: float = PRECIO,
+                             pool_base=None) -> dict:
+    """Genera los 3 niveles de sistema con garantía + la tabla de
+    probabilidades por categoría. Cada nivel lleva su garantía verificada y,
+    por linealidad, los premios ESPERADOS por sorteo (n_apuestas × prob).
+
+    Si se pasa `pool_base` (ranking de números del motor de los 115
+    algoritmos), el grupo de cada nivel se forma con esos números."""
+    cats = probabilidades_categoria()
+    sistemas = []
+    for nombre, desc, kw in PRESETS_SISTEMAS:
+        r = generar_sistema_diario(fecha, precio=precio, pool_base=pool_base,
+                                   **kw)
+        s = r["sistema"]
+        n = s["n_apuestas"]
+        esperado = {k: round(n * v["prob"], 4) for k, v in cats.items()}
+        sistemas.append({
+            "nombre": nombre,
+            "descripcion": desc,
+            "garantia": s["garantia"],
+            "pool": s["pool"],
+            "n_apuestas": n,
+            "coste_eur": s["coste_eur"],
+            "verificada_fuerza_bruta": s["verificada_fuerza_bruta"],
+            "apuestas": r["apuestas"],
+            "esperado_por_sorteo": esperado,
+        })
+    return {"sistemas": sistemas, "probabilidades_categoria": cats}
 
 
 if __name__ == "__main__":
