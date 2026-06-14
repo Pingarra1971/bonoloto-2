@@ -148,6 +148,152 @@ class LoteriasApiService {
 // login, sin clave de API.
 // ═══════════════════════════════════════════════════════════
 
+/// Resumen honesto de cuánto acierta la app a lo largo del tiempo (track
+/// record), calculado por el backend a partir de la comparación de cada
+/// sorteo. 'referenciaAzar' es lo que se acertaría por puro azar: sirve para
+/// ver, sin trampa, que la app ronda el azar.
+class TrackRecord {
+  final int nSorteos;
+  final double mediaMejor;
+  final int mejorHistorico;
+  final double referenciaAzar;
+  final Map<String, int> distribucion;
+  final List<int> serieMejor;
+
+  const TrackRecord({
+    required this.nSorteos,
+    required this.mediaMejor,
+    required this.mejorHistorico,
+    required this.referenciaAzar,
+    required this.distribucion,
+    this.serieMejor = const [],
+  });
+
+  static TrackRecord? fromJson(Map<String, dynamic> j) {
+    final n = (j['n_sorteos'] as num?)?.toInt() ?? 0;
+    if (n <= 0) return null;
+    final dist = <String, int>{};
+    if (j['distribucion'] is Map) {
+      (j['distribucion'] as Map).forEach((k, v) {
+        dist[k.toString()] = (v as num?)?.toInt() ?? 0;
+      });
+    }
+    final serie = (j['registros'] as List? ?? [])
+        .whereType<Map>()
+        .map((r) => (r['mejor'] as num?)?.toInt() ?? 0)
+        .toList();
+    return TrackRecord(
+      nSorteos: n,
+      mediaMejor: (j['media_mejor'] as num?)?.toDouble() ?? 0,
+      mejorHistorico: (j['mejor_historico'] as num?)?.toInt() ?? 0,
+      referenciaAzar: (j['referencia_azar'] as num?)?.toDouble() ?? 0,
+      distribucion: dist,
+      serieMejor: serie,
+    );
+  }
+}
+
+/// Una categoría de premio de la Bonoloto con su probabilidad real por
+/// apuesta (hipergeométrica exacta; no depende de qué números elijas).
+class CategoriaPremio {
+  final String clave; // "3", "4", "5", "5C", "6"
+  final int unaEntre;
+  final double prob;
+  const CategoriaPremio(this.clave, this.unaEntre, this.prob);
+}
+
+/// Un nivel de sistema con garantía combinatoria verificada
+/// (Económico / Equilibrado / Fuerte).
+class SistemaGarantizado {
+  final String nombre;
+  final String descripcion;
+  final int garantiaT;
+  final int garantiaP;
+  final String garantiaTexto;
+  final List<int> pool;
+  final int nApuestas;
+  final double costeEur;
+  final bool verificada;
+  final List<List<int>> apuestas;
+  final Map<String, double> esperadoPorSorteo;
+
+  const SistemaGarantizado({
+    required this.nombre,
+    required this.descripcion,
+    required this.garantiaT,
+    required this.garantiaP,
+    required this.garantiaTexto,
+    required this.pool,
+    required this.nApuestas,
+    required this.costeEur,
+    required this.verificada,
+    required this.apuestas,
+    required this.esperadoPorSorteo,
+  });
+
+  static SistemaGarantizado fromJson(Map<String, dynamic> j) {
+    final g = (j['garantia'] is Map)
+        ? Map<String, dynamic>.from(j['garantia'])
+        : <String, dynamic>{};
+    final apuestas = (j['apuestas'] as List? ?? []).map<List<int>>((a) {
+      final m = a is Map ? Map<String, dynamic>.from(a) : <String, dynamic>{};
+      return (m['numeros'] as List? ?? [])
+          .map((n) => (n as num).toInt())
+          .toList();
+    }).toList();
+    final esperado = <String, double>{};
+    if (j['esperado_por_sorteo'] is Map) {
+      (j['esperado_por_sorteo'] as Map).forEach((k, v) {
+        esperado[k.toString()] = (v as num?)?.toDouble() ?? 0;
+      });
+    }
+    return SistemaGarantizado(
+      nombre: (j['nombre'] ?? '').toString(),
+      descripcion: (j['descripcion'] ?? '').toString(),
+      garantiaT: (g['t'] as num?)?.toInt() ?? 0,
+      garantiaP: (g['p'] as num?)?.toInt() ?? 0,
+      garantiaTexto: (g['texto'] ?? '').toString(),
+      pool: (j['pool'] as List? ?? []).map((n) => (n as num).toInt()).toList(),
+      nApuestas: (j['n_apuestas'] as num?)?.toInt() ?? apuestas.length,
+      costeEur: (j['coste_eur'] as num?)?.toDouble() ?? 0,
+      verificada: j['verificada_fuerza_bruta'] == true,
+      apuestas: apuestas,
+      esperadoPorSorteo: esperado,
+    );
+  }
+}
+
+/// Los 3 niveles de sistema con garantía + la tabla de probabilidades por
+/// categoría de premio. Es lo único con efecto REAL: mejora la opción de un
+/// premio menor (garantía) y enseña la probabilidad de cada categoría.
+class SistemasInfo {
+  final List<SistemaGarantizado> sistemas;
+  final List<CategoriaPremio> categorias;
+  const SistemasInfo({this.sistemas = const [], this.categorias = const []});
+
+  static SistemasInfo? fromJson(dynamic sistemasJson, dynamic probsJson) {
+    if (sistemasJson is! List || sistemasJson.isEmpty) return null;
+    final sistemas = sistemasJson
+        .whereType<Map>()
+        .map((m) => SistemaGarantizado.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
+    final categorias = <CategoriaPremio>[];
+    if (probsJson is Map) {
+      for (final clave in const ['3', '4', '5', '5C', '6']) {
+        if (probsJson[clave] is Map) {
+          final c = Map<String, dynamic>.from(probsJson[clave]);
+          categorias.add(CategoriaPremio(
+            clave,
+            (c['una_entre'] as num?)?.toInt() ?? 0,
+            (c['prob'] as num?)?.toDouble() ?? 0,
+          ));
+        }
+      }
+    }
+    return SistemasInfo(sistemas: sistemas, categorias: categorias);
+  }
+}
+
 /// Datos del día ya parseados: combinaciones, apuestas múltiples, último
 /// sorteo, estadísticas y rendimiento aproximado por algoritmo.
 class DatosDiarios {
@@ -159,6 +305,8 @@ class DatosDiarios {
   final List<String> mejorasActivas;
   final DateTime? fechaSorteo;
   final int totalHistorico;
+  final TrackRecord? trackRecord;
+  final SistemasInfo? sistemasInfo;
 
   /// Predicción que se hizo PARA el último sorteo (la de "ayer"), ya con los
   /// aciertos calculados contra el resultado real. Vacía si no hay nada que
@@ -174,6 +322,8 @@ class DatosDiarios {
     this.mejorasActivas = const [],
     this.fechaSorteo,
     this.totalHistorico = 0,
+    this.trackRecord,
+    this.sistemasInfo,
     this.prediccionEvaluada = const [],
   });
 }
@@ -249,6 +399,12 @@ class DatosDiariosService {
         totalHistorico: (json['total_historico'] is num)
             ? (json['total_historico'] as num).toInt()
             : 0,
+        trackRecord: json['track_record'] is Map
+            ? TrackRecord.fromJson(
+                Map<String, dynamic>.from(json['track_record']))
+            : null,
+        sistemasInfo: SistemasInfo.fromJson(
+            json['sistemas'], json['probabilidades_categoria']),
         prediccionEvaluada: prediccionEvaluada,
       );
     } catch (e) {
