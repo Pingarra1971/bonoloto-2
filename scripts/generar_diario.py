@@ -48,6 +48,7 @@ HISTORICO_CSV_URL = os.getenv(
     "/pub?gid=0&single=true&output=csv",
 )
 CACHE_CSV = os.path.join(RAIZ, "data", "bonoloto_historico.csv")
+HISTORIAL_ACIERTOS = os.path.join(RAIZ, "data", "historial_aciertos.json")
 
 
 def _mapear_sorteo(item: dict):
@@ -161,44 +162,64 @@ def _obtener_ultimo():
     return _mapear_sorteo(dato) if dato else None
 
 
-def descargar_historico():
-    """Histórico de Bonoloto.
+def _guardar_historico_limpio(sorteos: dict):
+    """Escribe el histórico fusionado y validado a disco, en formato
+    'AAAA-MM-DD,n1,...,n6,complementario', ordenado de antiguo a reciente.
+    Es la copia AUTORIZADA del repo: se auto-repara cada día (sin duplicados,
+    sin filas inválidas) y sobrevive aunque la fuente externa caiga."""
+    try:
+        os.makedirs(os.path.dirname(CACHE_CSV), exist_ok=True)
+        with open(CACHE_CSV, "w", encoding="utf-8") as f:
+            for fecha in sorted(sorteos):
+                s = sorteos[fecha]
+                nums = ",".join(str(n) for n in s["numeros"])
+                comp = s.get("complementario", 0) or 0
+                f.write(f"{fecha},{nums},{comp}\n")
+        return True
+    except Exception as e:  # noqa: BLE001
+        print(f"  Aviso: no se pudo guardar el histórico limpio: {e}")
+        return False
 
-    El plan gratuito de la API NO permite descargar histórico (años pasados y
-    rangos de fechas devuelven 403 Forbidden). Por eso el histórico se obtiene
-    de un CSV público y abierto, y se mantiene al día con /results/bonoloto/latest
-    (que sí funciona en el plan gratuito).
+
+def descargar_historico():
+    """Histórico de Bonoloto, AUTO-REPARABLE.
+
+    El plan gratuito de la API NO permite descargar histórico, así que el
+    histórico se obtiene de un CSV público y se mantiene al día con
+    /results/bonoloto/latest. Para no perder nunca datos, esta versión FUSIONA
+    tres fuentes (sin duplicar y validando todo):
+      1) el histórico limpio ya guardado en el repo (base autorizada),
+      2) el CSV público recién descargado,
+      3) el último sorteo oficial de la API.
+    Luego reescribe el histórico limpio en disco (auto-reparado).
     """
     sorteos = {}
 
-    # 1) Histórico desde el CSV público.
+    # 1) Base: histórico limpio ya guardado en el repo (nunca perdemos datos).
+    if os.path.exists(CACHE_CSV):
+        try:
+            with open(CACHE_CSV, "r", encoding="utf-8") as f:
+                base = _parsear_csv_historico(f.read())
+            sorteos.update(base)
+            print(f"  Histórico guardado (base): {len(base)} sorteos.")
+        except Exception as e:  # noqa: BLE001
+            print(f"  Aviso: no se pudo leer el histórico guardado: {e}")
+
+    # 2) Fusionar el CSV público recién descargado.
     texto = _descargar_csv()
     if texto:
-        sorteos = _parsear_csv_historico(texto)
-        print(f"  CSV histórico: {len(sorteos)} sorteos.")
-        if not sorteos:
+        nuevos = _parsear_csv_historico(texto)
+        if nuevos:
+            antes = len(sorteos)
+            sorteos.update(nuevos)  # fusiona por fecha (sin duplicar)
+            print(f"  CSV público: {len(nuevos)} sorteos "
+                  f"(+{len(sorteos) - antes} nuevos).")
+        else:
             muestra = texto[:300].replace("\n", " | ")
             print("  ── El CSV no encajó. Primeros 300 caracteres ──")
             print("  " + muestra)
-            print("  ───────────────────────────────────────────────")
-        # Copia local de respaldo (best-effort).
-        try:
-            os.makedirs(os.path.dirname(CACHE_CSV), exist_ok=True)
-            with open(CACHE_CSV, "w", encoding="utf-8") as f:
-                f.write(texto)
-        except Exception:  # noqa: BLE001
-            pass
 
-    # 2) Si el CSV falló, usar la copia local de respaldo si existe.
-    if not sorteos and os.path.exists(CACHE_CSV):
-        try:
-            with open(CACHE_CSV, "r", encoding="utf-8") as f:
-                sorteos = _parsear_csv_historico(f.read())
-            print(f"  Respaldo local: {len(sorteos)} sorteos.")
-        except Exception as e:  # noqa: BLE001
-            print(f"  No se pudo leer el respaldo local: {e}")
-
-    # 3) Añadir el último sorteo oficial (mantiene el histórico al día).
+    # 3) Fusionar el último sorteo oficial de la API.
     ultimo = _obtener_ultimo()
     if ultimo and ultimo.get("fecha"):
         if ultimo["fecha"] not in sorteos:
@@ -206,8 +227,13 @@ def descargar_historico():
                   f"{ultimo['numeros']}")
         sorteos[ultimo["fecha"]] = ultimo
 
+    # 4) Auto-reparar: reescribir el histórico limpio (sin duplicados ni
+    #    filas inválidas, ya garantizado por el parser y el merge por fecha).
+    if sorteos:
+        _guardar_historico_limpio(sorteos)
+
     lista = sorted(sorteos.values(), key=lambda s: s["fecha"], reverse=True)
-    print(f"  Total sorteos válidos: {len(lista)}.")
+    print(f"  Total sorteos válidos (auto-reparado): {len(lista)}.")
     return lista
 
 
@@ -329,6 +355,110 @@ def _evaluacion_anterior(ruta, ultimo_sorteo):
     }
 
 
+def _referencia_azar(n_combos, trials=2000, seed=12345):
+    """Monte Carlo: cuántos números acertaría DE MEDIA la mejor de n_combos
+    combinaciones de 6, frente a un sorteo, por PURO AZAR. Es el listón honesto
+    contra el que comparar lo que acierta la app."""
+    import random as _r
+    rng = _r.Random(seed)
+    universo = list(range(1, 50))
+    n = max(1, int(n_combos))
+    total = 0
+    for _ in range(trials):
+        ganador = set(rng.sample(universo, 6))
+        mejor = 0
+        for _c in range(n):
+            h = len(set(rng.sample(universo, 6)) & ganador)
+            if h > mejor:
+                mejor = h
+        total += mejor
+    return round(total / trials, 2)
+
+
+def _actualizar_track_record(evaluacion):
+    """Acumula el resultado de cada comparación (cuántos acertó la app cada
+    sorteo) y devuelve un resumen honesto a lo largo del tiempo. A prueba de
+    fallos: nunca rompe la generación diaria."""
+    registros = []
+    try:
+        if os.path.exists(HISTORIAL_ACIERTOS):
+            with open(HISTORIAL_ACIERTOS, "r", encoding="utf-8") as f:
+                registros = (json.load(f) or {}).get("registros", [])
+    except Exception:  # noqa: BLE001
+        registros = []
+
+    # Añadir el registro de hoy si hay una evaluación nueva.
+    if evaluacion:
+        aciertos = [p.get("aciertos", 0)
+                    for p in (evaluacion.get("predicciones") or [])]
+        if aciertos:
+            reg = {
+                "fecha": evaluacion.get("fecha_sorteo"),
+                "mejor": int(max(aciertos)),
+                "media": round(sum(aciertos) / len(aciertos), 2),
+                "n": len(aciertos),
+            }
+            registros = [r for r in registros
+                         if r.get("fecha") != reg["fecha"]]
+            registros.append(reg)
+
+    # Dedupe por fecha, ordenar y limitar a los últimos 180.
+    porfecha = {r["fecha"]: r for r in registros if r.get("fecha")}
+    registros = [porfecha[f] for f in sorted(porfecha)][-180:]
+
+    # Guardar el acumulado (copia autorizada en el repo).
+    try:
+        os.makedirs(os.path.dirname(HISTORIAL_ACIERTOS), exist_ok=True)
+        with open(HISTORIAL_ACIERTOS, "w", encoding="utf-8") as f:
+            json.dump({"registros": registros}, f,
+                      ensure_ascii=False, indent=2)
+    except Exception as e:  # noqa: BLE001
+        print(f"  Aviso: no se pudo guardar el historial de aciertos: {e}")
+
+    if not registros:
+        return None
+
+    mejores = [r["mejor"] for r in registros]
+    n_sorteos = len(registros)
+    dist = {"0": 0, "1": 0, "2": 0, "3+": 0}
+    for m in mejores:
+        dist["3+" if m >= 3 else str(m)] += 1
+    n_medio = max(1, round(sum(r.get("n", 1) for r in registros) / n_sorteos))
+
+    return {
+        "n_sorteos": n_sorteos,
+        "media_mejor": round(sum(mejores) / n_sorteos, 2),
+        "mejor_historico": max(mejores),
+        "distribucion": dist,
+        "referencia_azar": _referencia_azar(n_medio),
+        "registros": [{"fecha": r["fecha"], "mejor": r["mejor"]}
+                      for r in registros[-60:]],
+    }
+
+
+def _numeros_favoritos(combinaciones) -> list:
+    """Ordena los números por cuánto los 'recomienda' el motor de los 115
+    algoritmos: frecuencia en las combinaciones del día, ponderada por el
+    índice de confianza de cada una. Desempata por anti-popularidad (sesgo de
+    cumpleaños: los números > 31 reparten con menos gente).
+
+    Honesto: esto NO sube la probabilidad de que esos números salgan; solo
+    decide qué números forman el grupo del sistema con garantía."""
+    from collections import defaultdict
+    peso = defaultdict(float)
+    for c in combinaciones or []:
+        nums = c.get("numeros") if isinstance(c, dict) else getattr(c, "numeros", [])
+        conf = (c.get("indice_confianza") if isinstance(c, dict)
+                else getattr(c, "indice_confianza", 50)) or 50
+        for n in nums or []:
+            peso[int(n)] += float(conf)
+
+    def popularidad(n):  # menor = menos popular (mejor reparto)
+        return 0 if n > 31 else (1 if n > 12 else 2)
+
+    return sorted(peso.keys(), key=lambda n: (-peso[n], popularidad(n), n))
+
+
 async def main():
     print("→ Descargando histórico de Bonoloto...")
     sorteos = descargar_historico()
@@ -356,6 +486,13 @@ async def main():
     # archivo, para comparar esa predicción con el resultado que acaba de salir.
     evaluacion = _evaluacion_anterior(SALIDA, sorteos[0] if sorteos else None)
 
+    # Track record honesto: acumula cuánto acierta la app sorteo a sorteo.
+    track_record = _actualizar_track_record(evaluacion)
+    if track_record:
+        print(f"  Track record: {track_record['n_sorteos']} sorteos, "
+              f"media mejor {track_record['media_mejor']} "
+              f"(azar ~{track_record['referencia_azar']}).")
+
     fecha_sorteo = proxima_fecha_sorteo()
 
     # Fase A — Sistema de apuestas con garantía combinatoria verificada
@@ -368,18 +505,21 @@ async def main():
     #  - Si falla por cualquier OTRO motivo inesperado (un error puntual), lo
     #    registramos y seguimos publicando el JSON v1 de siempre, para no dejar
     #    a la app sin su actualización diaria.
-    sistema_v2 = None
-    print("→ Construyendo sistema garantizado "
-          f"(pool {sistema_garantizado.POOL_SIZE}, garantía "
-          f"'{sistema_garantizado.GARANTIA_T} si "
-          f"{sistema_garantizado.GARANTIA_P}')...")
+    sistemas_v2 = None
+    print("→ Construyendo sistemas con garantía (3 niveles: Económico / "
+          "Equilibrado / Fuerte)...")
     try:
-        sistema_v2 = sistema_garantizado.generar_sistema_diario(fecha_sorteo)
-        print(f"  ✓ {sistema_v2['sistema']['n_apuestas']} apuestas, "
-              f"{sistema_v2['sistema']['coste_eur']} EUR, garantía verificada.")
+        favoritos = _numeros_favoritos(resultado.combinaciones)
+        print(f"  Grupo base (motor de algoritmos): "
+              f"{favoritos[:12]}")
+        sistemas_v2 = sistema_garantizado.generar_sistemas_diarios(
+            fecha_sorteo, pool_base=favoritos)
+        for s in sistemas_v2["sistemas"]:
+            print(f"  ✓ {s['nombre']}: {s['n_apuestas']} apuestas, "
+                  f"{s['coste_eur']} EUR, garantía verificada.")
     except Exception as e:  # noqa: BLE001  (SystemExit NO es Exception: se propaga)
-        print(f"  AVISO: no se pudo generar el sistema v2 ({e}). "
-              "Se publica el JSON v1 sin el bloque 'sistema'.")
+        print(f"  AVISO: no se pudieron generar los sistemas ({e}). "
+              "Se publica el JSON v1 sin el bloque 'sistemas'.")
 
     salida = {
         "generado": datetime.now(timezone.utc).isoformat(),
@@ -388,19 +528,39 @@ async def main():
         "estadisticas": calcular_estadisticas(sorteos),
         "ultimo_sorteo": sorteos[0] if sorteos else None,
         "evaluacion": evaluacion,
+        "track_record": track_record,
         "combinaciones": resultado.combinaciones,
         "apuestas_multiples": apuestas_multiples,
         "mejoras_activas": list(getattr(resultado, "mejoras_activas", []) or []),
     }
 
-    # ── Esquema v2 (retrocompatible): solo si el sistema se generó bien.
+    # ── Esquema v2 (retrocompatible): solo si los sistemas se generaron bien.
     # La app v1 ignora estas claves; la app v2 (Fase B) las aprovechará.
-    if sistema_v2 is not None:
+    if sistemas_v2 is not None:
+        # Bloque legacy 'sistema'/'apuestas' = el nivel Equilibrado, para no
+        # romper nada que ya lea esas claves.
+        equil = next((s for s in sistemas_v2["sistemas"]
+                      if s["nombre"] == "Equilibrado"),
+                     sistemas_v2["sistemas"][0])
         salida["version_esquema"] = 2
         salida["fecha"] = fecha_sorteo  # alias del esquema v2
-        salida["sistema"] = sistema_v2["sistema"]
-        salida["apuestas"] = sistema_v2["apuestas"]
-        salida["honestidad"] = sistema_v2["honestidad"]
+        salida["sistema"] = {
+            "pool": equil["pool"],
+            "garantia": equil["garantia"],
+            "verificada_fuerza_bruta": equil["verificada_fuerza_bruta"],
+            "n_apuestas": equil["n_apuestas"],
+            "coste_eur": equil["coste_eur"],
+        }
+        salida["apuestas"] = equil["apuestas"]
+        salida["honestidad"] = {
+            "nota": sistema_garantizado.NOTA_HONESTIDAD,
+            "backtest_ultima_fecha": None,
+            "scorers_superan_azar": [],
+        }
+        # NUEVO (mejoras 1 y 2): los 3 niveles + tabla de probabilidades.
+        salida["sistemas"] = sistemas_v2["sistemas"]
+        salida["probabilidades_categoria"] = \
+            sistemas_v2["probabilidades_categoria"]
     else:
         salida["version_esquema"] = 1
 
