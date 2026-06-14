@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/models.dart';
+import '../services/services.dart' show TrackRecord;
 import '../state/app_notifier.dart';
 import '../theme/app_theme.dart';
 
@@ -24,6 +25,7 @@ class HonestidadScreen extends ConsumerStatefulWidget {
 
 class _HonestidadScreenState extends ConsumerState<HonestidadScreen> {
   EstadisticasHonestidad _stats = EstadisticasHonestidad.vacio;
+  TrackRecord? _trackRecord;
   bool _cargando = true;
 
   @override
@@ -35,9 +37,11 @@ class _HonestidadScreenState extends ConsumerState<HonestidadScreen> {
   Future<void> _cargar() async {
     setState(() => _cargando = true);
     final stats = await ref.read(appProvider.notifier).cargarHonestidad();
+    final track = await ref.read(appProvider.notifier).obtenerTrackRecord();
     if (!mounted) return;
     setState(() {
       _stats = stats ?? EstadisticasHonestidad.vacio;
+      _trackRecord = track;
       _cargando = false;
     });
   }
@@ -77,6 +81,8 @@ class _HonestidadScreenState extends ConsumerState<HonestidadScreen> {
                   const SizedBox(height: 16),
                   _seccionBacktest(theme),
                   const SizedBox(height: 16),
+                  _seccionTrackRecord(theme),
+                  const SizedBox(height: 16),
                   _seccionCosteOportunidad(theme),
                   const SizedBox(height: 24),
                   _disclaimer(theme),
@@ -113,6 +119,127 @@ class _HonestidadScreenState extends ConsumerState<HonestidadScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ── Track record: cuánto acierta la app de verdad ──
+  Widget _seccionTrackRecord(ThemeData theme) {
+    final tr = _trackRecord;
+    if (tr == null) {
+      return _Card(
+        titulo: 'CUÁNTO ACIERTA LA APP',
+        child: Text(
+          'Aún no hay suficientes sorteos registrados. A partir de ahora, '
+          'cada día se apunta cuántos números acierta tu mejor combinación, '
+          'y aquí verás el resumen honesto.',
+          style: GoogleFonts.rajdhani(fontSize: 15),
+        ),
+      );
+    }
+
+    final dist = tr.distribucion;
+    final total = dist.values.fold<int>(0, (a, b) => a + b);
+
+    Widget barra(String etiqueta, int veces) {
+      final frac = total > 0 ? veces / total : 0.0;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 34,
+              child:
+                  Text(etiqueta, style: GoogleFonts.spaceMono(fontSize: 14)),
+            ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: frac,
+                  minHeight: 14,
+                  backgroundColor:
+                      theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.primary.withValues(alpha: 0.7)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 64,
+              child: Text('$veces veces',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.spaceMono(fontSize: 13)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _Card(
+      titulo: 'CUÁNTO ACIERTA LA APP',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('En los últimos ${tr.nSorteos} sorteos registrados:',
+              style: GoogleFonts.rajdhani(
+                  fontSize: 15, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _dato(theme, tr.mediaMejor.toStringAsFixed(2),
+                  'La app\n(mejor combo)'),
+              _dato(theme, tr.referenciaAzar.toStringAsFixed(2),
+                  'Puro azar\n(referencia)'),
+              _dato(theme, '${tr.mejorHistorico}', 'Récord\n(mejor día)'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text('Cuántas veces acertó tu mejor combinación:',
+              style: GoogleFonts.rajdhani(
+                  fontSize: 14, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          barra('0', dist['0'] ?? 0),
+          barra('1', dist['1'] ?? 0),
+          barra('2', dist['2'] ?? 0),
+          barra('3+', dist['3+'] ?? 0),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Honesto: la app (${tr.mediaMejor.toStringAsFixed(2)}) y el puro '
+              'azar (${tr.referenciaAzar.toStringAsFixed(2)}) aciertan '
+              'prácticamente lo mismo. Más combinaciones dan más oportunidades '
+              'de acertar algún número, pero no mejoran la probabilidad: el '
+              'pleno sigue siendo 1 entre 13.983.816.',
+              style: GoogleFonts.rajdhani(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dato(ThemeData theme, String valor, String etiqueta) {
+    return Column(
+      children: [
+        Text(valor,
+            style: GoogleFonts.spaceMono(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary)),
+        const SizedBox(height: 4),
+        Text(etiqueta,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.rajdhani(
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+      ],
     );
   }
 
