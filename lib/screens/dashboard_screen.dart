@@ -6,6 +6,7 @@ import '../state/app_notifier.dart';
 import '../theme/app_theme.dart';
 import '../models/models.dart';
 import '../widgets/widgets.dart';
+import 'sistema_garantizado_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -135,6 +136,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                 const SizedBox(height: 16),
 
+                // Sistema con garantía (premios menores reales)
+                _TarjetaSistemaGarantia()
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 350.ms)
+                    .slideY(begin: 0.2, end: 0),
+
+                const SizedBox(height: 16),
+
                 // Acceso rápido estadísticas
                 _AccesoRapido()
                     .animate()
@@ -172,11 +181,14 @@ class _TarjetaEstadoSistema extends ConsumerWidget {
                 Icon(Icons.memory_rounded,
                     color: BonolotoTheme.verdeAccent, size: 20),
                 const SizedBox(width: 8),
-                Text('ESTADO DEL SISTEMA',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      letterSpacing: 1.5,
-                      color: BonolotoTheme.verdeAccent,
-                    )),
+                Flexible(
+                  child: Text('ESTADO DEL SISTEMA',
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        letterSpacing: 1.5,
+                        color: BonolotoTheme.verdeAccent,
+                      )),
+                ),
                 const Spacer(),
                 Container(
                   padding:
@@ -475,11 +487,14 @@ class _TarjetaUltimaPrediccion extends ConsumerWidget {
                 Icon(Icons.history_rounded,
                     color: BonolotoTheme.verdeAccent, size: 20),
                 const SizedBox(width: 8),
-                Text('ÚLTIMAS COMBINACIONES',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      letterSpacing: 1.5,
-                      color: BonolotoTheme.verdeAccent,
-                    )),
+                Flexible(
+                  child: Text('ÚLTIMAS COMBINACIONES',
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        letterSpacing: 1.5,
+                        color: BonolotoTheme.verdeAccent,
+                      )),
+                ),
                 const Spacer(),
                 Text(
                   '${sesion.fechaSolicitud.day}/${sesion.fechaSolicitud.month}/${sesion.fechaSolicitud.year}',
@@ -876,6 +891,59 @@ class _TarjetaAccesoRapido extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tarjeta de acceso al Sistema con garantía (mejoras 1 y 2).
+class _TarjetaSistemaGarantia extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => const SistemaGarantizadoScreen()),
+      ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: BonolotoTheme.verdeAccent.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.verified_rounded,
+                color: BonolotoTheme.verdeAccent, size: 28),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('SISTEMA CON GARANTÍA',
+                      style: GoogleFonts.rajdhani(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          color: BonolotoTheme.verdeAccent)),
+                  const SizedBox(height: 2),
+                  Text(
+                      'Garantiza un premio menor y enseña las probabilidades '
+                      'reales de cada categoría.',
+                      style: GoogleFonts.rajdhani(fontSize: 14)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+          ],
         ),
       ),
     );
