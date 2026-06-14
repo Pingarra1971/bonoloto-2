@@ -11,7 +11,7 @@ import '../services/backend_service.dart';
 import '../services/api_client.dart';
 import '../services/services.dart'
     show ExportService, BackupService, LoteriasApiService,
-        DatosDiariosService, DatosDiarios;
+        DatosDiariosService, DatosDiarios, TrackRecord, SistemasInfo;
 import 'app_state.dart';
 
 /// StateNotifier global: reemplaza al `AppProvider` (ChangeNotifier) del v7.
@@ -487,6 +487,28 @@ class AppNotifier extends StateNotifier<AppState> {
   /// Devuelve el último sorteo oficial JUNTO CON la predicción que se hizo
   /// para ese mismo sorteo (la de "ayer"), ya con sus aciertos. Si todavía no
   /// hay predicción anterior que comparar, la lista va vacía.
+  /// Los 3 niveles de sistema con garantía + la tabla de probabilidades por
+  /// categoría de premio. Devuelve null si aún no están en el JSON.
+  Future<SistemasInfo?> obtenerSistemas() async {
+    try {
+      final datos = await _obtenerDatosDiarios();
+      return datos?.sistemasInfo;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Track record honesto: resumen de cuánto acierta la app a lo largo del
+  /// tiempo (lo calcula el backend). Devuelve null si aún no hay datos.
+  Future<TrackRecord?> obtenerTrackRecord() async {
+    try {
+      final datos = await _obtenerDatosDiarios();
+      return datos?.trackRecord;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<(ResultadoSorteo?, List<CombinacionBonoloto>)>
       obtenerSorteoConEvaluacion() async {
     ResultadoSorteo? sorteo;
