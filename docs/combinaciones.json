@@ -1,5 +1,5 @@
 {
-  "generado": "2026-06-15T13:43:53.747595+00:00",
+  "generado": "2026-06-15T17:39:19.870055+00:00",
   "fecha_sorteo": "2026-06-15",
   "total_historico": 4114,
   "estadisticas": [
@@ -459,242 +459,7 @@
     "reintegro": 8,
     "bote": 110000000
   },
-  "evaluacion": {
-    "fecha_sorteo": "2026-06-14",
-    "numeros_ganadores": [
-      10,
-      42,
-      19,
-      47,
-      31,
-      36
-    ],
-    "complementario": 8,
-    "reintegro": 8,
-    "predicciones": [
-      {
-        "numeros": [
-          10,
-          16,
-          30,
-          31,
-          37,
-          41
-        ],
-        "aciertos": 2
-      },
-      {
-        "numeros": [
-          1,
-          16,
-          26,
-          30,
-          37,
-          41
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          1,
-          16,
-          30,
-          37,
-          40,
-          47
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          10,
-          16,
-          26,
-          35,
-          37,
-          47
-        ],
-        "aciertos": 2
-      },
-      {
-        "numeros": [
-          6,
-          18,
-          28,
-          33,
-          37,
-          41
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          9,
-          16,
-          30,
-          37,
-          41,
-          46
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          6,
-          16,
-          28,
-          37,
-          41,
-          47
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          5,
-          16,
-          30,
-          33,
-          41,
-          46
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          1,
-          18,
-          22,
-          33,
-          40,
-          41
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          6,
-          18,
-          21,
-          37,
-          40,
-          41
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          16,
-          30,
-          33,
-          37,
-          40,
-          41
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          6,
-          16,
-          26,
-          31,
-          37,
-          41
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          16,
-          22,
-          31,
-          37,
-          41,
-          46
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          16,
-          26,
-          33,
-          35,
-          37,
-          41
-        ],
-        "aciertos": 0
-      },
-      {
-        "numeros": [
-          5,
-          16,
-          26,
-          37,
-          41,
-          42
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          16,
-          18,
-          31,
-          33,
-          37,
-          41
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          16,
-          31,
-          37,
-          40,
-          41,
-          42
-        ],
-        "aciertos": 2
-      },
-      {
-        "numeros": [
-          1,
-          16,
-          22,
-          37,
-          46,
-          47
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          3,
-          16,
-          22,
-          26,
-          31,
-          41
-        ],
-        "aciertos": 1
-      },
-      {
-        "numeros": [
-          10,
-          16,
-          26,
-          31,
-          37,
-          41
-        ],
-        "aciertos": 2
-      }
-    ],
-    "mejor_aciertos": 2
-  },
+  "evaluacion": null,
   "track_record": {
     "n_sorteos": 1,
     "media_mejor": 2.0,
@@ -718,34 +483,34 @@
       "numeros": [
         10,
         16,
-        25,
+        22,
         31,
-        41,
-        46
+        37,
+        41
       ],
-      "indice_confianza": 85.68,
-      "ic_inferior": 84.9,
+      "indice_confianza": 85.94,
+      "ic_inferior": 86.7,
       "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771541+00:00",
+      "fecha_generacion": "2026-06-15T17:38:52.482410+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9338962617661141,
+        0.937888093824007,
         1.0,
         0.8703703703703703,
         1.0
       ],
-      "score_pareto": 0.9476,
+      "score_pareto": 0.9492,
       "penalizacion": 0.0,
       "premio_esperado_relativo": 1.0
     },
@@ -758,581 +523,406 @@
         37,
         42
       ],
-      "indice_confianza": 85.48,
-      "ic_inferior": 85.3,
+      "indice_confianza": 85.89,
+      "ic_inferior": 85.2,
       "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771589+00:00",
+      "fecha_generacion": "2026-06-15T17:38:52.482451+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9357042215977635,
+        0.941321775836029,
         1.0,
         0.7962962962962963,
         1.0
       ],
-      "score_pareto": 0.9335,
+      "score_pareto": 0.9358,
       "penalizacion": 0.0,
       "premio_esperado_relativo": 1.0
     },
     {
       "numeros": [
         10,
-        13,
-        22,
-        31,
-        37,
-        42
+        16,
+        25,
+        40,
+        41,
+        47
       ],
-      "indice_confianza": 85.41,
-      "ic_inferior": 85.0,
+      "indice_confianza": 85.57,
+      "ic_inferior": 84.3,
       "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771623+00:00",
+      "fecha_generacion": "2026-06-15T17:38:52.482472+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9284834102492483,
+        0.926494015338962,
         1.0,
-        0.9074074074074074,
+        0.9814814814814815,
         1.0
       ],
-      "score_pareto": 0.9529,
+      "score_pareto": 0.9669,
       "penalizacion": 0.0,
-      "premio_esperado_relativo": 1.0
+      "premio_esperado_relativo": 1.005
     },
     {
       "numeros": [
         10,
         18,
-        25,
-        31,
-        46,
-        47
-      ],
-      "indice_confianza": 85.34,
-      "ic_inferior": 84.7,
-      "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771641+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9182661272509783,
-        1.0,
-        0.9814814814814815,
-        1.0
-      ],
-      "score_pareto": 0.9636,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 0.972
-    },
-    {
-      "numeros": [
-        10,
-        12,
-        30,
+        28,
         31,
         37,
-        47
+        41
       ],
-      "indice_confianza": 84.16,
-      "ic_inferior": 82.5,
-      "ic_superior": 99.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771658+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9409627347849977,
-        1.0,
-        0.9814814814814815,
-        0.8
-      ],
-      "score_pareto": 0.9327,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 0.972
-    },
-    {
-      "numeros": [
-        10,
-        13,
-        30,
-        31,
-        42,
-        47
-      ],
-      "indice_confianza": 83.96,
+      "indice_confianza": 84.31,
       "ic_inferior": 84.3,
       "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771674+00:00",
+      "fecha_generacion": "2026-06-15T17:38:52.482490+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.938877489241519,
-        0.6666666666666667,
+        0.9213741795725099,
         1.0,
+        0.99,
         0.8
       ],
-      "score_pareto": 0.8689,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 0.972
-    },
-    {
-      "numeros": [
-        10,
-        13,
-        25,
-        40,
-        41,
-        42
-      ],
-      "indice_confianza": 83.61,
-      "ic_inferior": 82.8,
-      "ic_superior": 99.2,
-      "fecha_generacion": "2026-06-15T13:43:23.771691+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9429095690714088,
-        1.0,
-        0.9074074074074074,
-        0.8
-      ],
-      "score_pareto": 0.9186,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 0.977
-    },
-    {
-      "numeros": [
-        1,
-        16,
-        25,
-        31,
-        36,
-        46
-      ],
-      "indice_confianza": 83.16,
-      "ic_inferior": 82.2,
-      "ic_superior": 98.8,
-      "fecha_generacion": "2026-06-15T13:43:23.771707+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9416610566353024,
-        1.0,
-        0.9444444444444444,
-        0.8
-      ],
-      "score_pareto": 0.9256,
+      "score_pareto": 0.9265,
       "penalizacion": 0.0,
       "premio_esperado_relativo": 1.0
-    },
-    {
-      "numeros": [
-        10,
-        13,
-        22,
-        37,
-        46,
-        47
-      ],
-      "indice_confianza": 82.56,
-      "ic_inferior": 83.6,
-      "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771723+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9384877889915467,
-        0.6666666666666667,
-        0.8518518518518519,
-        1.0
-      ],
-      "score_pareto": 0.8791,
-      "penalizacion": 0.05,
-      "premio_esperado_relativo": 1.005
     },
     {
       "numeros": [
         10,
         15,
-        22,
+        30,
         31,
-        37,
-        46
-      ],
-      "indice_confianza": 82.37,
-      "ic_inferior": 83.4,
-      "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771741+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9310540733870605,
-        0.33333333333333337,
-        0.9814814814814815,
-        1.0
-      ],
-      "score_pareto": 0.8354,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 1.0
-    },
-    {
-      "numeros": [
-        10,
-        16,
-        22,
-        37,
-        43,
+        42,
         47
       ],
-      "indice_confianza": 82.33,
-      "ic_inferior": 81.9,
-      "ic_superior": 98.2,
-      "fecha_generacion": "2026-06-15T13:43:23.771757+00:00",
+      "indice_confianza": 83.97,
+      "ic_inferior": 84.2,
+      "ic_superior": 99.2,
+      "fecha_generacion": "2026-06-15T17:38:52.482508+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9264625461616278,
-        0.6666666666666667,
+        0.950740184761945,
         1.0,
-        1.0
+        0.97,
+        0.8
       ],
-      "score_pareto": 0.9039,
+      "score_pareto": 0.9343,
       "penalizacion": 0.05,
-      "premio_esperado_relativo": 1.034
-    },
-    {
-      "numeros": [
-        10,
-        16,
-        28,
-        31,
-        41,
-        47
-      ],
-      "indice_confianza": 82.33,
-      "ic_inferior": 84.8,
-      "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771774+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9494782018218535,
-        1.0,
-        0.31481481481481477,
-        0.8
-      ],
-      "score_pareto": 0.8028,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 1.0
-    },
-    {
-      "numeros": [
-        10,
-        16,
-        22,
-        31,
-        42,
-        47
-      ],
-      "indice_confianza": 82.12,
-      "ic_inferior": 86.1,
-      "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771791+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.7,
-        0.6,
-        0.6,
-        0.6
-      ],
-      "score_pareto": 0.7,
-      "penalizacion": 0.0,
-      "premio_esperado_relativo": 1.0
+      "premio_esperado_relativo": 0.972
     },
     {
       "numeros": [
         1,
-        16,
+        18,
         22,
         37,
         42,
-        45
+        47
       ],
-      "indice_confianza": 82.11,
-      "ic_inferior": 80.7,
-      "ic_superior": 97.3,
-      "fecha_generacion": "2026-06-15T13:43:23.771804+00:00",
+      "indice_confianza": 83.9,
+      "ic_inferior": 83.2,
+      "ic_superior": 99.2,
+      "fecha_generacion": "2026-06-15T17:38:52.482527+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9026301656947952,
+        0.9452203051879962,
         1.0,
-        0.99,
+        0.9814814814814815,
         0.8
       ],
-      "score_pareto": 0.9191,
+      "score_pareto": 0.9344,
       "penalizacion": 0.0,
       "premio_esperado_relativo": 1.034
     },
     {
       "numeros": [
         1,
+        10,
         13,
-        26,
+        22,
         37,
-        42,
         46
       ],
-      "indice_confianza": 82.05,
-      "ic_inferior": 82.2,
-      "ic_superior": 97.8,
-      "fecha_generacion": "2026-06-15T13:43:23.771821+00:00",
+      "indice_confianza": 83.48,
+      "ic_inferior": 83.2,
+      "ic_superior": 100.0,
+      "fecha_generacion": "2026-06-15T17:38:52.482545+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.928270505993277,
+        0.9298813963336557,
         0.6666666666666667,
         0.9259259259259259,
         1.0
       ],
-      "score_pareto": 0.8898,
+      "score_pareto": 0.8905,
       "penalizacion": 0.0,
-      "premio_esperado_relativo": 1.034
+      "premio_esperado_relativo": 1.0
+    },
+    {
+      "numeros": [
+        10,
+        12,
+        22,
+        31,
+        41,
+        47
+      ],
+      "indice_confianza": 83.38,
+      "ic_inferior": 84.5,
+      "ic_superior": 100.0,
+      "fecha_generacion": "2026-06-15T17:38:52.482563+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.9428566728248672,
+        0.6666666666666667,
+        1.0,
+        0.8
+      ],
+      "score_pareto": 0.8705,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.0
+    },
+    {
+      "numeros": [
+        1,
+        10,
+        18,
+        22,
+        37,
+        41
+      ],
+      "indice_confianza": 83.04,
+      "ic_inferior": 83.6,
+      "ic_superior": 99.8,
+      "fecha_generacion": "2026-06-15T17:38:52.482580+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.9410859530965907,
+        0.6666666666666667,
+        0.8518518518518519,
+        1.0
+      ],
+      "score_pareto": 0.8801,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.0
+    },
+    {
+      "numeros": [
+        10,
+        15,
+        25,
+        30,
+        31,
+        46
+      ],
+      "indice_confianza": 82.98,
+      "ic_inferior": 83.1,
+      "ic_superior": 98.9,
+      "fecha_generacion": "2026-06-15T17:38:52.482598+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.9649883808283478,
+        1.0,
+        0.97,
+        0.6
+      ],
+      "score_pareto": 0.9,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 0.894
+    },
+    {
+      "numeros": [
+        10,
+        13,
+        16,
+        24,
+        31,
+        41
+      ],
+      "indice_confianza": 82.84,
+      "ic_inferior": 82.3,
+      "ic_superior": 98.3,
+      "fecha_generacion": "2026-06-15T17:38:52.482616+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.9289793420326561,
+        0.6666666666666667,
+        1.0,
+        1.0
+      ],
+      "score_pareto": 0.9049,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 0.968
     },
     {
       "numeros": [
         1,
         16,
         28,
-        37,
+        31,
         46,
         47
       ],
-      "indice_confianza": 81.63,
-      "ic_inferior": 82.4,
-      "ic_superior": 98.7,
-      "fecha_generacion": "2026-06-15T13:43:23.771837+00:00",
+      "indice_confianza": 82.8,
+      "ic_inferior": 84.3,
+      "ic_superior": 100.0,
+      "fecha_generacion": "2026-06-15T17:38:52.482633+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9605711397003703,
-        1.0,
-        0.87,
-        0.6
+        0.9503424776557984,
+        0.6666666666666667,
+        0.98,
+        0.8
       ],
-      "score_pareto": 0.8782,
-      "penalizacion": 0.05,
-      "premio_esperado_relativo": 1.005
+      "score_pareto": 0.8695,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 0.972
     },
     {
       "numeros": [
         10,
-        18,
-        21,
-        37,
-        42,
+        16,
+        31,
+        41,
+        46,
         47
       ],
-      "indice_confianza": 81.3,
-      "ic_inferior": 83.1,
-      "ic_superior": 99.6,
-      "fecha_generacion": "2026-06-15T13:43:23.771854+00:00",
-      "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
-      },
-      "objetivos_nsga2": [
-        0.9404346232779578,
-        0.6666666666666667,
-        0.7777777777777778,
-        1.0
-      ],
-      "score_pareto": 0.8651,
-      "penalizacion": 0.05,
-      "premio_esperado_relativo": 1.034
-    },
-    {
-      "numeros": [
-        10,
-        26,
-        31,
-        37,
-        41,
-        42
-      ],
-      "indice_confianza": 81.18,
-      "ic_inferior": 86.2,
+      "indice_confianza": 81.9,
+      "ic_inferior": 87.7,
       "ic_superior": 100.0,
-      "fecha_generacion": "2026-06-15T13:43:23.771870+00:00",
+      "fecha_generacion": "2026-06-15T17:38:52.482651+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
         0.7,
@@ -1346,73 +936,248 @@
     },
     {
       "numeros": [
+        10,
+        22,
+        31,
+        37,
+        42,
+        47
+      ],
+      "indice_confianza": 81.77,
+      "ic_inferior": 86.8,
+      "ic_superior": 100.0,
+      "fecha_generacion": "2026-06-15T17:38:52.482665+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.7,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "score_pareto": 0.7,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.034
+    },
+    {
+      "numeros": [
+        10,
+        25,
+        31,
+        37,
+        41,
+        46
+      ],
+      "indice_confianza": 81.73,
+      "ic_inferior": 87.6,
+      "ic_superior": 100.0,
+      "fecha_generacion": "2026-06-15T17:38:52.482679+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.7,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "score_pareto": 0.7,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.034
+    },
+    {
+      "numeros": [
+        1,
+        16,
+        30,
+        37,
+        40,
+        41
+      ],
+      "indice_confianza": 81.65,
+      "ic_inferior": 82.6,
+      "ic_superior": 97.2,
+      "fecha_generacion": "2026-06-15T17:38:52.482693+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.9530312794589987,
+        1.0,
+        0.5,
+        0.8
+      ],
+      "score_pareto": 0.8412,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.005
+    },
+    {
+      "numeros": [
+        10,
+        26,
+        31,
+        37,
+        42,
+        46
+      ],
+      "indice_confianza": 81.48,
+      "ic_inferior": 86.2,
+      "ic_superior": 100.0,
+      "fecha_generacion": "2026-06-15T17:38:52.482710+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.7,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "score_pareto": 0.7,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.034
+    },
+    {
+      "numeros": [
+        10,
+        13,
+        25,
+        35,
+        42,
+        46
+      ],
+      "indice_confianza": 81.42,
+      "ic_inferior": 82.9,
+      "ic_superior": 98.7,
+      "fecha_generacion": "2026-06-15T17:38:52.482724+00:00",
+      "pesos_por_algoritmo": {
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
+      },
+      "objetivos_nsga2": [
+        0.9441225276676478,
+        0.6666666666666667,
+        0.6296296296296297,
+        1.0
+      ],
+      "score_pareto": 0.8369,
+      "penalizacion": 0.0,
+      "premio_esperado_relativo": 1.034
+    },
+    {
+      "numeros": [
         1,
         18,
         22,
         31,
-        35,
-        42
+        37,
+        46
       ],
-      "indice_confianza": 81.08,
-      "ic_inferior": 81.6,
-      "ic_superior": 97.6,
-      "fecha_generacion": "2026-06-15T13:43:23.771883+00:00",
+      "indice_confianza": 81.35,
+      "ic_inferior": 83.3,
+      "ic_superior": 99.9,
+      "fecha_generacion": "2026-06-15T17:38:52.482741+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9511905898094731,
-        0.6666666666666667,
-        0.98,
+        0.9533467045969233,
+        1.0,
+        0.31481481481481477,
         0.8
       ],
-      "score_pareto": 0.8698,
+      "score_pareto": 0.8043,
       "penalizacion": 0.0,
       "premio_esperado_relativo": 1.0
     },
     {
       "numeros": [
+        1,
         10,
         16,
-        25,
-        37,
-        39,
-        46
+        23,
+        40,
+        41
       ],
-      "indice_confianza": 81.04,
-      "ic_inferior": 81.1,
-      "ic_superior": 98.1,
-      "fecha_generacion": "2026-06-15T13:43:23.771900+00:00",
+      "indice_confianza": 81.31,
+      "ic_inferior": 81.2,
+      "ic_superior": 98.8,
+      "fecha_generacion": "2026-06-15T17:38:52.482758+00:00",
       "pesos_por_algoritmo": {
-        "entropia": 0.0665,
-        "hot_cold_bias": 0.0985,
-        "covarianza": 0.0647,
-        "lstm": 0.082,
-        "transformer": 0.0891,
-        "markov": 0.0682,
-        "bayesiano": 0.0757,
-        "xgboost": 0.0827,
-        "reinforcement_learning": 0.1051,
-        "monte_carlo": 0.0596
+        "entropia": 0.0623,
+        "hot_cold_bias": 0.0988,
+        "covarianza": 0.0631,
+        "lstm": 0.0816,
+        "transformer": 0.0931,
+        "markov": 0.0695,
+        "bayesiano": 0.0722,
+        "xgboost": 0.0822,
+        "reinforcement_learning": 0.1054,
+        "monte_carlo": 0.0629
       },
       "objetivos_nsga2": [
-        0.9491168513185505,
-        1.0,
-        0.5,
-        0.8
+        0.9554658296924687,
+        0.6666666666666667,
+        0.98,
+        0.6
       ],
-      "score_pareto": 0.8396,
+      "score_pareto": 0.8315,
       "penalizacion": 0.0,
-      "premio_esperado_relativo": 1.034
+      "premio_esperado_relativo": 0.972
     }
   ],
   "apuestas_multiples": {
@@ -1447,9 +1212,9 @@
       "numeros": [
         1,
         10,
-        30,
         31,
         37,
+        40,
         41,
         42,
         46,
@@ -1462,7 +1227,7 @@
       "numeros": [
         1,
         10,
-        30,
+        16,
         31,
         37,
         40,
@@ -1479,8 +1244,8 @@
         1,
         10,
         16,
-        30,
         31,
+        36,
         37,
         40,
         41,
@@ -1499,8 +1264,8 @@
     "pool": [
       1,
       10,
-      13,
       16,
+      18,
       22,
       25,
       31,
@@ -1544,14 +1309,14 @@
     },
     {
       "numeros": [
-        13,
         16,
+        18,
         25,
         37,
         42,
         46
       ],
-      "premio_esperado_rel": 1.493
+      "premio_esperado_rel": 1.499
     },
     {
       "numeros": [
@@ -1567,51 +1332,40 @@
     {
       "numeros": [
         1,
-        13,
+        16,
         22,
         37,
         41,
         47
       ],
-      "premio_esperado_rel": 1.397
+      "premio_esperado_rel": 1.4
     },
     {
       "numeros": [
         10,
-        13,
-        25,
-        31,
-        37,
-        46
-      ],
-      "premio_esperado_rel": 1.383
-    },
-    {
-      "numeros": [
-        10,
-        16,
+        18,
         31,
         41,
         42,
         47
       ],
-      "premio_esperado_rel": 1.376
+      "premio_esperado_rel": 1.378
     },
     {
       "numeros": [
         1,
-        13,
+        16,
         31,
         42,
         46,
         47
       ],
-      "premio_esperado_rel": 1.369
+      "premio_esperado_rel": 1.372
     },
     {
       "numeros": [
-        13,
         16,
+        18,
         22,
         25,
         31,
@@ -1621,58 +1375,69 @@
     },
     {
       "numeros": [
-        1,
+        10,
         16,
+        25,
+        31,
+        37,
+        46
+      ],
+      "premio_esperado_rel": 1.354
+    },
+    {
+      "numeros": [
+        1,
+        18,
         25,
         31,
         37,
         47
       ],
-      "premio_esperado_rel": 1.346
+      "premio_esperado_rel": 1.348
     },
     {
       "numeros": [
         1,
         10,
-        16,
+        18,
         37,
         41,
         46
       ],
-      "premio_esperado_rel": 1.319
+      "premio_esperado_rel": 1.321
     },
     {
       "numeros": [
         10,
-        13,
         16,
+        18,
         22,
         46,
         47
       ],
-      "premio_esperado_rel": 1.302
+      "premio_esperado_rel": 1.306
+    },
+    {
+      "numeros": [
+        1,
+        10,
+        18,
+        22,
+        31,
+        42
+      ],
+      "premio_esperado_rel": 1.257
     },
     {
       "numeros": [
         1,
         10,
         16,
-        22,
-        31,
-        42
-      ],
-      "premio_esperado_rel": 1.259
-    },
-    {
-      "numeros": [
-        1,
-        10,
-        13,
         25,
         41,
         42
       ],
-      "premio_esperado_rel": 1.252
+      "premio_esperado_rel": 1.25
     },
     {
       "numeros": [
@@ -1701,13 +1466,13 @@
         "texto": "Un acierto de 3 garantizado si salen 4 de tus 10 números"
       },
       "pool": [
+        1,
         10,
-        13,
         16,
         22,
-        25,
         31,
         37,
+        41,
         42,
         46,
         47
@@ -1720,45 +1485,45 @@
           "numeros": [
             16,
             22,
-            25,
             31,
             37,
+            41,
             47
           ],
-          "premio_esperado_rel": 1.439
+          "premio_esperado_rel": 1.51
         },
         {
           "numeros": [
-            10,
+            1,
             16,
-            31,
             37,
+            41,
             42,
             46
           ],
-          "premio_esperado_rel": 1.417
-        },
-        {
-          "numeros": [
-            13,
-            16,
-            22,
-            25,
-            46,
-            47
-          ],
-          "premio_esperado_rel": 1.382
+          "premio_esperado_rel": 1.42
         },
         {
           "numeros": [
             10,
-            13,
+            16,
             22,
-            25,
+            31,
+            46,
+            47
+          ],
+          "premio_esperado_rel": 1.317
+        },
+        {
+          "numeros": [
+            1,
+            10,
+            22,
+            31,
             42,
             47
           ],
-          "premio_esperado_rel": 1.348
+          "premio_esperado_rel": 1.279
         }
       ],
       "esperado_por_sorteo": {
@@ -1780,8 +1545,8 @@
       "pool": [
         1,
         10,
-        13,
         16,
+        18,
         22,
         25,
         31,
@@ -1819,14 +1584,14 @@
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             25,
             37,
             42,
             46
           ],
-          "premio_esperado_rel": 1.493
+          "premio_esperado_rel": 1.499
         },
         {
           "numeros": [
@@ -1842,51 +1607,40 @@
         {
           "numeros": [
             1,
-            13,
+            16,
             22,
             37,
             41,
             47
           ],
-          "premio_esperado_rel": 1.397
+          "premio_esperado_rel": 1.4
         },
         {
           "numeros": [
             10,
-            13,
-            25,
-            31,
-            37,
-            46
-          ],
-          "premio_esperado_rel": 1.383
-        },
-        {
-          "numeros": [
-            10,
-            16,
+            18,
             31,
             41,
             42,
             47
           ],
-          "premio_esperado_rel": 1.376
+          "premio_esperado_rel": 1.378
         },
         {
           "numeros": [
             1,
-            13,
+            16,
             31,
             42,
             46,
             47
           ],
-          "premio_esperado_rel": 1.369
+          "premio_esperado_rel": 1.372
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             22,
             25,
             31,
@@ -1896,58 +1650,69 @@
         },
         {
           "numeros": [
-            1,
+            10,
             16,
+            25,
+            31,
+            37,
+            46
+          ],
+          "premio_esperado_rel": 1.354
+        },
+        {
+          "numeros": [
+            1,
+            18,
             25,
             31,
             37,
             47
           ],
-          "premio_esperado_rel": 1.346
+          "premio_esperado_rel": 1.348
         },
         {
           "numeros": [
             1,
             10,
-            16,
+            18,
             37,
             41,
             46
           ],
-          "premio_esperado_rel": 1.319
+          "premio_esperado_rel": 1.321
         },
         {
           "numeros": [
             10,
-            13,
             16,
+            18,
             22,
             46,
             47
           ],
-          "premio_esperado_rel": 1.302
+          "premio_esperado_rel": 1.306
+        },
+        {
+          "numeros": [
+            1,
+            10,
+            18,
+            22,
+            31,
+            42
+          ],
+          "premio_esperado_rel": 1.257
         },
         {
           "numeros": [
             1,
             10,
             16,
-            22,
-            31,
-            42
-          ],
-          "premio_esperado_rel": 1.259
-        },
-        {
-          "numeros": [
-            1,
-            10,
-            13,
             25,
             41,
             42
           ],
-          "premio_esperado_rel": 1.252
+          "premio_esperado_rel": 1.25
         },
         {
           "numeros": [
@@ -1980,8 +1745,8 @@
       "pool": [
         1,
         10,
-        13,
         16,
+        18,
         22,
         25,
         31,
@@ -2008,47 +1773,47 @@
         },
         {
           "numeros": [
-            16,
+            18,
             22,
             31,
             37,
             41,
             47
           ],
-          "premio_esperado_rel": 1.51
+          "premio_esperado_rel": 1.512
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             25,
             41,
             42,
             47
           ],
-          "premio_esperado_rel": 1.484
+          "premio_esperado_rel": 1.49
         },
         {
           "numeros": [
-            16,
+            18,
             22,
             41,
             42,
             46,
             47
           ],
-          "premio_esperado_rel": 1.481
+          "premio_esperado_rel": 1.483
         },
         {
           "numeros": [
-            13,
+            16,
             25,
             31,
             37,
             46,
             47
           ],
-          "premio_esperado_rel": 1.463
+          "premio_esperado_rel": 1.466
         },
         {
           "numeros": [
@@ -2063,36 +1828,47 @@
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             25,
             41,
             46,
             47
           ],
-          "premio_esperado_rel": 1.451
+          "premio_esperado_rel": 1.457
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             22,
             25,
             37,
             41
           ],
-          "premio_esperado_rel": 1.45
+          "premio_esperado_rel": 1.455
         },
         {
           "numeros": [
-            13,
+            10,
+            18,
+            25,
+            37,
+            41,
+            46
+          ],
+          "premio_esperado_rel": 1.448
+        },
+        {
+          "numeros": [
             16,
+            18,
             31,
             37,
             41,
             42
           ],
-          "premio_esperado_rel": 1.443
+          "premio_esperado_rel": 1.448
         },
         {
           "numeros": [
@@ -2118,6 +1894,17 @@
         },
         {
           "numeros": [
+            16,
+            18,
+            22,
+            31,
+            37,
+            42
+          ],
+          "premio_esperado_rel": 1.427
+        },
+        {
+          "numeros": [
             10,
             22,
             31,
@@ -2129,14 +1916,14 @@
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             22,
-            31,
+            25,
             37,
             42
           ],
-          "premio_esperado_rel": 1.421
+          "premio_esperado_rel": 1.42
         },
         {
           "numeros": [
@@ -2148,39 +1935,6 @@
             47
           ],
           "premio_esperado_rel": 1.418
-        },
-        {
-          "numeros": [
-            13,
-            16,
-            22,
-            25,
-            37,
-            42
-          ],
-          "premio_esperado_rel": 1.415
-        },
-        {
-          "numeros": [
-            10,
-            13,
-            31,
-            42,
-            46,
-            47
-          ],
-          "premio_esperado_rel": 1.412
-        },
-        {
-          "numeros": [
-            10,
-            16,
-            25,
-            37,
-            41,
-            46
-          ],
-          "premio_esperado_rel": 1.411
         },
         {
           "numeros": [
@@ -2196,112 +1950,123 @@
         {
           "numeros": [
             10,
-            13,
+            16,
             22,
             37,
             41,
             47
           ],
-          "premio_esperado_rel": 1.406
+          "premio_esperado_rel": 1.409
         },
         {
           "numeros": [
             1,
-            16,
+            18,
             25,
             37,
             41,
             47
           ],
-          "premio_esperado_rel": 1.403
+          "premio_esperado_rel": 1.405
         },
         {
           "numeros": [
             10,
-            13,
             16,
+            18,
             37,
             42,
             46
           ],
-          "premio_esperado_rel": 1.4
+          "premio_esperado_rel": 1.405
         },
         {
           "numeros": [
             1,
-            13,
+            16,
             22,
             37,
             41,
             46
           ],
-          "premio_esperado_rel": 1.396
+          "premio_esperado_rel": 1.399
         },
         {
           "numeros": [
             1,
-            13,
             16,
+            18,
             37,
             42,
             47
           ],
-          "premio_esperado_rel": 1.392
+          "premio_esperado_rel": 1.397
         },
         {
           "numeros": [
             10,
-            16,
+            18,
             25,
             31,
             42,
             47
           ],
-          "premio_esperado_rel": 1.392
+          "premio_esperado_rel": 1.394
         },
         {
           "numeros": [
-            13,
+            16,
             22,
             25,
             31,
             41,
             42
           ],
-          "premio_esperado_rel": 1.387
+          "premio_esperado_rel": 1.39
         },
         {
           "numeros": [
-            13,
             16,
+            18,
             22,
             25,
             46,
             47
           ],
-          "premio_esperado_rel": 1.382
+          "premio_esperado_rel": 1.387
+        },
+        {
+          "numeros": [
+            10,
+            16,
+            31,
+            42,
+            46,
+            47
+          ],
+          "premio_esperado_rel": 1.38
+        },
+        {
+          "numeros": [
+            10,
+            18,
+            22,
+            37,
+            46,
+            47
+          ],
+          "premio_esperado_rel": 1.369
         },
         {
           "numeros": [
             10,
             16,
             22,
-            37,
-            46,
-            47
-          ],
-          "premio_esperado_rel": 1.367
-        },
-        {
-          "numeros": [
-            10,
-            13,
-            22,
             41,
             42,
             46
           ],
-          "premio_esperado_rel": 1.364
+          "premio_esperado_rel": 1.366
         },
         {
           "numeros": [
@@ -2317,32 +2082,43 @@
         {
           "numeros": [
             1,
-            16,
+            18,
             25,
             31,
             42,
             46
           ],
-          "premio_esperado_rel": 1.35
-        },
-        {
-          "numeros": [
-            1,
-            25,
-            31,
-            41,
-            46,
-            47
-          ],
-          "premio_esperado_rel": 1.347
+          "premio_esperado_rel": 1.352
         },
         {
           "numeros": [
             10,
-            13,
             16,
+            18,
             31,
             41,
+            47
+          ],
+          "premio_esperado_rel": 1.352
+        },
+        {
+          "numeros": [
+            1,
+            16,
+            22,
+            31,
+            42,
+            47
+          ],
+          "premio_esperado_rel": 1.348
+        },
+        {
+          "numeros": [
+            1,
+            25,
+            31,
+            41,
+            46,
             47
           ],
           "premio_esperado_rel": 1.347
@@ -2350,24 +2126,24 @@
         {
           "numeros": [
             1,
-            13,
-            22,
-            31,
-            42,
-            47
-          ],
-          "premio_esperado_rel": 1.345
-        },
-        {
-          "numeros": [
-            1,
-            16,
+            18,
             22,
             25,
             41,
             47
           ],
-          "premio_esperado_rel": 1.342
+          "premio_esperado_rel": 1.344
+        },
+        {
+          "numeros": [
+            1,
+            18,
+            31,
+            41,
+            46,
+            47
+          ],
+          "premio_esperado_rel": 1.341
         },
         {
           "numeros": [
@@ -2375,21 +2151,10 @@
             16,
             31,
             41,
-            46,
-            47
-          ],
-          "premio_esperado_rel": 1.339
-        },
-        {
-          "numeros": [
-            1,
-            13,
-            31,
-            41,
             42,
             46
           ],
-          "premio_esperado_rel": 1.332
+          "premio_esperado_rel": 1.335
         },
         {
           "numeros": [
@@ -2416,76 +2181,65 @@
         {
           "numeros": [
             1,
-            10,
-            13,
-            25,
-            42,
-            46
-          ],
-          "premio_esperado_rel": 1.316
-        },
-        {
-          "numeros": [
-            1,
-            16,
+            18,
             22,
             25,
             31,
             37
           ],
-          "premio_esperado_rel": 1.312
+          "premio_esperado_rel": 1.31
         },
         {
           "numeros": [
             10,
-            13,
             16,
+            18,
             22,
             31,
             46
-          ],
-          "premio_esperado_rel": 1.307
-        },
-        {
-          "numeros": [
-            1,
-            13,
-            16,
-            22,
-            46,
-            47
           ],
           "premio_esperado_rel": 1.303
         },
         {
           "numeros": [
             1,
+            16,
+            18,
+            22,
+            46,
+            47
+          ],
+          "premio_esperado_rel": 1.298
+        },
+        {
+          "numeros": [
+            1,
             10,
-            13,
+            18,
+            37,
+            46,
+            47
+          ],
+          "premio_esperado_rel": 1.285
+        },
+        {
+          "numeros": [
+            1,
+            10,
+            16,
             25,
             41,
             47
           ],
-          "premio_esperado_rel": 1.287
-        },
-        {
-          "numeros": [
-            1,
-            13,
-            16,
-            25,
-            31,
-            41
-          ],
-          "premio_esperado_rel": 1.287
+          "premio_esperado_rel": 1.284
         },
         {
           "numeros": [
             1,
             10,
             16,
-            31,
-            37,
+            25,
+            42,
             46
           ],
           "premio_esperado_rel": 1.284
@@ -2493,13 +2247,24 @@
         {
           "numeros": [
             1,
-            10,
             16,
-            37,
-            46,
-            47
+            18,
+            25,
+            31,
+            41
           ],
-          "premio_esperado_rel": 1.284
+          "premio_esperado_rel": 1.283
+        },
+        {
+          "numeros": [
+            1,
+            10,
+            18,
+            31,
+            37,
+            46
+          ],
+          "premio_esperado_rel": 1.282
         },
         {
           "numeros": [
@@ -2516,23 +2281,23 @@
           "numeros": [
             1,
             10,
-            13,
             16,
+            18,
             22,
             25
           ],
-          "premio_esperado_rel": 1.275
+          "premio_esperado_rel": 1.271
         },
         {
           "numeros": [
             1,
             10,
-            13,
+            16,
             25,
             31,
             37
           ],
-          "premio_esperado_rel": 1.263
+          "premio_esperado_rel": 1.26
         },
         {
           "numeros": [
@@ -2549,12 +2314,12 @@
           "numeros": [
             1,
             10,
-            16,
+            18,
             22,
             41,
             42
           ],
-          "premio_esperado_rel": 1.252
+          "premio_esperado_rel": 1.251
         },
         {
           "numeros": [
